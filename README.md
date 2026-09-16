@@ -4,14 +4,14 @@
 
 ## 👥 Thành viên nhóm & Phân công vai trò
 
-**Lớp:** 3A · **Phòng:** ____ · **Cụm:** ____ · **Track:** ____
+**Lớp:** 3A · **Phòng:** E403 · **Cụm:** Bàn thi · **Track:** Track B — Trợ lý Học viên (Discord)
 
 | Họ và Tên | Mã Học Viên | Vai trò chính | Phần việc đảm nhiệm trong dự án |
 |---|---|---|---|
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
-|  |  |  |  |
+| Nguyễn Vũ Anh | 2A202602502 | Đội trưởng / Product & Spec | Quản lý tiến độ, viết spec, phân tích khảo sát nỗi đau và bằng chứng |
+| Nguyễn Thành Duy | 2A202602804 | AI & Prompt Engineer | Thiết kế prompt trích xuất task, deadline, độ ưu tiên & bộ lọc chống hallucination |
+| Trương Việt Anh | 2A202602444 | Fullstack / Discord Integration | Xây dựng pipeline đọc tin nhắn, parser và giao diện bản tin digest |
+| Phạm Quang Đạt | 2A202602704 | QA / Evaluation & Testing | Xây dựng bộ Golden Set (20 case), đo lường độ chính xác và điều phối thử nghiệm |
 
 > Nhóm copy nguyên file README này về repo của mình, rồi điền bảng trên. Cột **Phần việc đảm nhiệm** ghi càng cụ thể càng tốt.
 
