@@ -1,53 +1,48 @@
 ﻿# MINI HACKATHON AI — CHECKPOINT 1
-## VÍ DỤ THỰC TẾ · CANVAS CP1
-**Hướng B · Trợ lý Học viên (Discord)** — Discord Action Digest (Trích xuất Task, Deadline & Thay đổi lịch)  
-*Nhóm: Magician · Lớp: 3A · Phòng: E403 · Đội trưởng: Nguyễn Vũ Anh (2A202602502)*  
-*Repo công khai: [https://github.com/vuanh259/K4-3A-E403-Magician](https://github.com/vuanh259/K4-3A-E403-Magician)*
+## BẢN CHỮA CANVAS CHUẨN 4 Ô — NHÓM MAGICIAN (LỚP 3A · PHÒNG E403)
+**Track B · Trợ lý Học viên (Discord)** — Đề tài: Discord Action Digest  
+*Đội trưởng: Nguyễn Vũ Anh (2A202602502) · Link Repo: https://github.com/vuanh259/K4-3A-E403-Magician*
+
+> **Ý tưởng ban đầu (TRƯỚC khi gọt):** Trợ lý Discord đọc/tổng hợp tin nhắn và chỉ ra và nhắc những thông tin quan trọng: task, deadline, lịch thay đổi và mức độ ưu tiên (quá rộng, ôm đồm).  
+> **CÙNG Ý TƯỞNG ĐÓ, VIẾT LẠI CHO ĐÚNG THÀNH 4 Ô:**
 
 ---
 
-### 01 · NGƯỜI DÙNG & NỖI ĐAU
-**Học viên & TA muốn nắm bắt kịp thời việc quan trọng**
-- **Job:** học viên và TA theo dõi nhiều channel Discord hàng ngày để biết việc cần làm, bài tập cần nộp, lịch học và phòng học.
-- **Pain:** kênh Discord có lưu lượng tin nhắn lớn; thông báo quan trọng và đính chính lịch bị trôi lẫn trong hàng trăm tin nhắn thảo luận. Học viên mất 10–20 phút/ngày cuộn tìm tin, dễ quên deadline hoặc đến nhầm giờ học.
-> *(Không chứa chữ "AI" trong phát biểu nỗi đau)*
+### 1 · PAIN (Ai · Đang làm gì · Vướng đâu · Hậu quả gì)
+Học viên khóa AI Thực Chiến · mỗi ngày phải theo dõi 3–10 channel Discord để cập nhật bài tập Lab, thời hạn nộp bài và lịch học · phải lướt đọc thủ công hàng trăm tin nhắn thảo luận và hỏi đáp vụn vặt · mất 10–20 phút mỗi ngày, và 50% từng bị trễ hạn nộp bài tập hoặc đến nhầm phòng học do tin thông báo bị trôi.  
+*(Tuyệt đối không chứa chữ "AI" trong phát biểu nỗi đau).*
 
 ---
 
-### 02 · BẰNG CHỨNG BAN ĐẦU
-**Khảo sát thực tế (n = 30) & Mining dữ liệu được phép dùng**
-- **Khảo sát thực tế ($n = 30$ học viên Batch 4):**
-  - **50.0% (15/30)** học viên xác nhận từng bỏ lỡ hoặc phát hiện muộn tin quan trọng.
-  - **96.7% (29/30)** mong muốn công cụ tự động tổng hợp task/deadline/lịch thay đổi.
-- **Quote nguyên văn:**
-  - *"Do có quá nhiều tin nhắn mình đã để trôi thông tin quan trọng mà giảng viên gửi"*
-  - *"Suýt quên hoàn thành daily standup vì quá nhiều channel để check"*
-  - *"Bỏ lỡ workshop 1 và 2 do có quá nhiều kênh liên lạc"*
-- **Mining pack (`data/discord-pack` 1.092 tin):** Bản tin bot hiện có bị cắt cụt, chèn chuỗi lỗi và hoàn toàn thiếu phân cấp ưu tiên Task/Deadline.
-> *(Không copy số liệu, snippet hay mã nguồn thật ra ngoài data/)*
+### 2 · BẰNG CHỨNG (Chuẩn A Khảo sát + Chuẩn B Mining dữ liệu)
+- **Đường A (Khảo sát):** Hỏi 30 học viên trong lớp ngoài nhóm — 15 người (50.0%) xác nhận từng bỏ lỡ hoặc phát hiện muộn ít nhất một thông tin quan trọng trên Discord; 29/30 người (96.7%) muốn có công cụ tự động tổng hợp. Log đủ 30 câu trả lời trong `evidence_log.md`, kèm 5 câu nguyên văn:
+  1. *"Do có quá nhiều tin nhắn mình đã để trôi thông tin quan trọng mà giảng viên gửi"*
+  2. *"Suýt quên hoàn thành daily standup vì quá nhiều channel để check"*
+  3. *"Bỏ lỡ workshop 1 và 2 do có quá nhiều kênh liên lạc"*
+  4. *"Quên mất lịch workshop do tắt thông báo"*
+  5. *"Không để ý task"*
+- **Đường B (Mining data):** 1.092 tin trong `data/discord-pack/`: 4 bản tin bot hiện tại bị cắt cụt, chèn lỗi "nguồn tham chiếu" và 0% bản tin trích xuất được Actionable Task & Deadline.
 
 ---
 
-### 03 · LÁT CẮT & AUTOMATION
-**Một luồng tin nhắn, một danh sách hành động rõ ràng**
-`🔴 P1 KHẨN CẤP` · `🟡 P2 QUAN TRỌNG` · `🟢 P3 THEO DÕI`
-
-- **Lát cắt:** Từ luồng tin nhắn Discord trong ngày: AI tự động lọc bỏ tin tán gẫu, trích xuất Task · Deadline · Đổi lịch và phân thành 3 mức ưu tiên kèm trích dẫn gốc để học viên mở ra 30 giây là nắm trọn việc.
-- **Conditional:** trích xuất khi có nguồn chắc chắn; gắn nhãn `[⚠️ Cần xác nhận lại]` khi thời gian mập mờ; từ chối và tag TA khi ngoài phạm vi.
+### 3 · IMPACT & QUYẾT ĐỊNH CHỌN (Bảng 3 ứng viên)
+Ba ứng viên: (1) Trích xuất Task, Deadline & Đổi lịch (Action Digest) · (2) Bot phát hiện học viên stuck chủ động gửi DM · (3) Q&A bài học trên Discord.  
+- **CHỌN Action Digest:** ~1.000 học viên + 20 TA × 3–5 lần/ngày × 10–20 phút lọc tin. Chi phí sai sót cao nếu bịa deadline → giải quyết bằng Conditional + Source-first citation.  
+- **LOẠI gợi ý gửi DM:** Xâm phạm riêng tư, gây phiền toái; **LOẠI Q&A:** Trùng VLearn Tutor, cần RAG toàn bộ bài giảng không khả thi trong 47.5h.
 
 ---
 
-### 04 · NGƯỜI THỬ & PHÂN CÔNG
-**Có người thử, có người chịu trách nhiệm**
-- **Willing users dự kiến:** mời test 2 người ngoài nhóm (cam kết thử nghiệm ở CP5):
-  1. **Lê Nguyễn Thái Dương** (Mã HV: `2A202602383`)
-  2. **Nguyễn Xuân Khuê** (Mã HV: `2A202602999`)
-- **4 vai trò:**
-  - **Vũ Anh:** Spec & Evidence (Khảo sát $n=30$)
-  - **Thành Duy:** AI & Prompt Engineering (P1/P2/P3)
-  - **Việt Anh:** Fullstack & Discord Integration
-  - **Quang Đạt:** QA & Eval (Golden Set 20 case)
-> *(Đầy đủ 2 willing users khai báo từ CP1 để lấy trọn 8 điểm R6)*
+### 4 · LÁT CẮT (MỘT CÂU: 1 user · 1 việc · 1 quyết định AI · 1 kết quả)
+Một học viên khóa AI Thực Chiến · dán hoặc chọn một luồng tin nhắn Discord trong ngày · AI quyết định tin này có chứa Task, Deadline hoặc Đổi lịch hay không (phân loại P1/P2/P3) · trả về Thẻ công việc gồm tiêu đề, thời hạn và độ ưu tiên kèm trích dẫn nguyên văn câu gốc từ TA/Giảng viên (hoặc gắn cờ `[⚠️ Cần xác nhận lại]` nếu thời gian mập mờ).
 
 ---
-*Checkpoint 1: Canvas đã điền · Nhóm Magician · Lớp 3A · Phòng E403*
+
+> 💡 **Ghi chú quan trọng:** Năm việc còn lại (Q&A bài học, bot tự DM học viên, trả lời điểm danh, sinh bài tập mới, gửi tin tự động) không mất đi — chúng xuống mục **"Non-goals / Để sau"** trong `spec.md`. Ghi ra đó vẫn được tính là nhóm đã cân nhắc kỹ lưỡng.
+
+---
+**Cam kết triển khai & Người thử nghiệm:**
+- **Mức tự động hóa:** Conditional / Augment (Con người là người quyết định cuối cùng; AI chỉ trích xuất có căn cứ).
+- **2 Willing Users (Cam kết thử nghiệm tại CP5):**
+  1. Lê Nguyễn Thái Dương (Mã HV: `2A202602383`)
+  2. Nguyễn Xuân Khuê (Mã HV: `2A202602999`)
+- **Phân công nhóm:** Nguyễn Vũ Anh (Đội trưởng - Spec & Evidence) · Nguyễn Thành Duy (AI & Prompt) · Trương Việt Anh (Fullstack & Discord) · Phạm Quang Đạt (QA & Golden Set).
