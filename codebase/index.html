@@ -3,251 +3,421 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Discord Action Digest — Prototype Mockup (CP2)</title>
+  <title>Discord Action Digest — Bản Mẫu Tương Tác (CP2 Prototype)</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .custom-scroll::-webkit-scrollbar { width: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
-  <!-- Top Navigation -->
-  <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between shadow-md">
-    <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-indigo-500/30">
-        <i class="fa-brands fa-discord"></i>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
+
+  <!-- Top Header Navigation (HAX G1: Make clear what system can do) -->
+  <header class="bg-slate-900 border-b border-slate-800 px-6 py-3.5 sticky top-0 z-30 shadow-lg">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-600/30">
+          <i class="fa-brands fa-discord"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-bold text-white tracking-tight">Discord Action Digest</h1>
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              CP2 Interactive Prototype
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">
+            <span class="text-indigo-400 font-semibold">[HAX G1]</span> Chuyên trích xuất Task, Deadline & Lịch đổi từ kênh Discord · Không trả lời lý thuyết bài tập
+          </p>
+        </div>
       </div>
-      <div>
-        <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-          Discord Action Digest
-          <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Batch 4 · E403</span>
-        </h1>
-        <p class="text-xs text-slate-400">Trích xuất tự động Task, Deadline & Thay đổi lịch từ kênh Discord</p>
+
+      <div class="flex items-center gap-3">
+        <button onclick="toggleFlowModal(true)" class="text-xs font-semibold px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-diagram-project text-indigo-400"></i> Xem Sơ Đồ Luồng
+        </button>
+
+        <button onclick="loadScenario('happy')" class="text-xs font-semibold px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-md shadow-indigo-600/20 flex items-center gap-1.5">
+          <i class="fa-solid fa-play"></i> Quét Lại Luồng Chuẩn
+        </button>
       </div>
-    </div>
-    <div class="flex items-center gap-4">
-      <span class="text-xs text-slate-400 bg-slate-700/60 px-3 py-1.5 rounded-lg border border-slate-600">
-        <i class="fa-solid fa-users mr-1.5 text-emerald-400"></i> Nhóm Magician · Lớp 3A
-      </span>
-      <button onclick="scanMessages()" id="scanBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all shadow-md shadow-indigo-600/30 flex items-center gap-2">
-        <i class="fa-solid fa-bolt"></i> <span>Quét & Trích xuất AI</span>
-      </button>
     </div>
   </header>
 
-  <!-- Main Workspace -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-    <!-- Left Panel: Discord Raw Chat Feed (Mock Data) -->
-    <section class="lg:col-span-5 bg-slate-800/80 border border-slate-700 rounded-2xl p-5 flex flex-col h-[750px] shadow-xl">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-700">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-hashtag text-slate-400"></i>
-          <span class="font-bold text-slate-200">thông-báo-chung</span>
+  <!-- Scenario Switcher Bar (Demonstrating 4 Paths) -->
+  <section class="bg-slate-900/60 border-b border-slate-800/80 px-6 py-2.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="text-slate-400 font-bold uppercase tracking-wider text-[11px]">4 Đường đi trải nghiệm:</span>
+        <div class="flex items-center gap-1.5">
+          <button onclick="loadScenario('happy')" id="btn-happy" class="scenario-btn active px-3 py-1 rounded-md font-semibold bg-indigo-600 text-white transition">
+            1. Happy Path
+          </button>
+          <button onclick="loadScenario('low')" id="btn-low" class="scenario-btn px-3 py-1 rounded-md font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+            2. Low-confidence (Mập mờ)
+          </button>
+          <button onclick="loadScenario('failure')" id="btn-failure" class="scenario-btn px-3 py-1 rounded-md font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+            3. Failure (Không căn cứ)
+          </button>
+          <button onclick="openCorrectionModal('Lab 2 VLearn', '23:59 Hôm nay', 'P2')" id="btn-correction" class="scenario-btn px-3 py-1 rounded-md font-semibold bg-slate-800 text-amber-400 hover:bg-slate-700 transition">
+            4. Correction (Sửa sai)
+          </button>
         </div>
-        <span class="text-xs text-slate-400">Dữ liệu mẫu từ discord-pack</span>
       </div>
 
-      <!-- Messages Stream -->
-      <div class="flex-1 overflow-y-auto space-y-4 py-4 pr-2 text-sm" id="chatStream">
-        <!-- Msg 1 -->
-        <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-700/40 transition">
-          <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-xs text-white">GV</div>
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold text-emerald-400 text-xs">Giảng viên (Lead Coach)</span>
-              <span class="text-[10px] text-slate-400">14:15 Hôm nay</span>
-            </div>
-            <p class="text-slate-200 mt-1">Các nhóm chú ý: Hạn nộp Checkpoint 1 là 19:30 tối nay ngày 16/9. Đội trưởng nộp link repo GitHub công khai và Canvas 4 ô qua form nhé.</p>
-          </div>
-        </div>
+      <div class="text-[11px] text-slate-400 flex items-center gap-2">
+        <span><b>Nhóm:</b> Magician · Lớp 3A · E403</span>
+        <span class="text-slate-600">|</span>
+        <span class="text-emerald-400 font-medium"><i class="fa-solid fa-circle-check"></i> Conditional Mode</span>
+      </div>
+    </div>
+  </section>
 
-        <!-- Msg 2 -->
-        <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-700/40 transition">
-          <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs text-white">TA</div>
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold text-blue-400 text-xs">TA - Minh Hằng</span>
-              <span class="text-[10px] text-slate-400">15:30 Hôm nay</span>
-            </div>
-            <p class="text-slate-200 mt-1">🔔 <b>ĐÍNH CHÍNH LỊCH:</b> Buổi Workshop chiều nay dời từ phòng E402 sang <b>phòng E403</b> lúc 17:30 nhé mọi người!</p>
-          </div>
+  <!-- Main Grid Workspace -->
+  <main class="max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
+    
+    <!-- LEFT PANEL: Raw Discord Stream Simulator -->
+    <section class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col h-[750px] shadow-xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-hashtag text-indigo-400"></i>
+          <span class="font-bold text-slate-200 text-sm">thông-báo-khoá-học</span>
         </div>
+        <span class="text-[11px] text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-700">
+          Feed mẫu từ discord-pack
+        </span>
+      </div>
 
-        <!-- Msg 3 (Noise) -->
-        <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-700/40 transition opacity-60">
-          <div class="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center font-bold text-xs text-white">HV</div>
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold text-slate-300 text-xs">Học viên Nam</span>
-              <span class="text-[10px] text-slate-400">16:02</span>
-            </div>
-            <p class="text-slate-300 mt-1">Ae lát xong lab ra cổng trường làm cốc trà đá không?</p>
-          </div>
-        </div>
+      <div class="flex-1 overflow-y-auto custom-scroll space-y-3.5 py-4 pr-1" id="chatFeed">
+        <!-- Injected via JS -->
+      </div>
 
-        <!-- Msg 4 (Ambiguous) -->
-        <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-700/40 transition">
-          <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs text-white">TA</div>
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold text-blue-400 text-xs">TA - Quốc Bảo</span>
-              <span class="text-[10px] text-slate-400">16:45 Hôm nay</span>
-            </div>
-            <p class="text-slate-200 mt-1">Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn.</p>
-          </div>
-        </div>
-
-        <!-- Msg 5 -->
-        <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-700/40 transition">
-          <div class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center font-bold text-xs text-white">BC</div>
-          <div class="flex-1">
-            <div class="flex items-center gap-2">
-              <span class="font-semibold text-purple-400 text-xs">BTC Hackathon</span>
-              <span class="text-[10px] text-slate-400">17:00 Hôm nay</span>
-            </div>
-            <p class="text-slate-200 mt-1">Hạn chốt tài liệu AI Spec (spec.md) là <b>21:00 ngày 17/9</b> tại Checkpoint 4. Sau thời gian này sẽ khoá quality bar.</p>
-          </div>
-        </div>
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
+        <span>Bộ lọc tiền xử lý: Bỏ qua tin rác, chào hỏi, sticker</span>
+        <span class="text-indigo-400"><i class="fa-solid fa-filter"></i> Pre-filter active</span>
       </div>
     </section>
 
-    <!-- Right Panel: Action Digest Dashboard -->
-    <section class="lg:col-span-7 bg-slate-800/80 border border-slate-700 rounded-2xl p-5 flex flex-col h-[750px] shadow-xl">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-700">
+    <!-- RIGHT PANEL: Action Digest Dashboard -->
+    <section class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col h-[750px] shadow-xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div class="flex items-center gap-3">
-          <i class="fa-solid fa-list-check text-indigo-400 text-lg"></i>
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
           <div>
-            <h2 class="font-bold text-slate-100 text-base">Bảng Tổng Hợp Việc Cần Làm (Action Digest)</h2>
-            <p class="text-xs text-slate-400">Phân loại tự động theo mức độ ưu tiên & kiểm định căn cứ</p>
+            <h2 class="font-bold text-white text-sm">Bảng Tổng Hợp Việc Cần Làm (Action Digest)</h2>
+            <p class="text-xs text-slate-400">Phân cấp ưu tiên tự động · Cảnh báo mốc giờ không chắc chắn</p>
           </div>
         </div>
-        <div id="statsBadge" class="text-xs bg-slate-700/80 text-indigo-300 font-semibold px-3 py-1 rounded-full border border-indigo-500/20">
-          4 việc cần lưu ý
+
+        <div id="statsBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800 text-indigo-300 border border-slate-700 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="taskCountText">4 việc cần lưu ý</span>
         </div>
       </div>
 
       <!-- Action Items Container -->
-      <div class="flex-1 overflow-y-auto space-y-4 py-4 pr-1" id="digestContainer">
-        <!-- P1: Urgent -->
-        <div class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-4 relative shadow-sm hover:border-rose-500/50 transition">
-          <div class="flex items-start justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span class="bg-rose-500 text-white text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                <i class="fa-solid fa-triangle-exclamation mr-1"></i> P1 · Khẩn cấp
-              </span>
-              <span class="text-xs font-semibold text-rose-300">Thay đổi địa điểm</span>
-            </div>
-            <span class="text-xs font-bold text-amber-300 bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded">
-              <i class="fa-regular fa-clock mr-1"></i> 17:30 Hôm nay
-            </span>
-          </div>
-          <h3 class="text-sm font-bold text-white mt-2">Dời Workshop chiều nay sang phòng E403</h3>
-          <div class="mt-2 text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/60 text-slate-300">
-            <span class="text-slate-400 font-mono text-[11px] block mb-0.5">📌 Nguồn: TA - Minh Hằng (15:30)</span>
-            "🔔 ĐÍNH CHÍNH LỊCH: Buổi Workshop chiều nay dời từ phòng E402 sang phòng E403..."
-          </div>
-          <div class="mt-3 flex items-center justify-between text-xs pt-2 border-t border-rose-500/20">
-            <span class="text-rose-400/80 text-[11px]"><i class="fa-solid fa-shield-check"></i> Đã xác thực từ thông báo TA</span>
-            <button class="text-slate-400 hover:text-white transition flex items-center gap-1 text-[11px]">
-              <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem tin gốc
-            </button>
-          </div>
-        </div>
+      <div class="flex-1 overflow-y-auto custom-scroll space-y-4 py-4 pr-1" id="digestContainer">
+        <!-- Injected via JS based on scenario -->
+      </div>
 
-        <!-- P1: Deadline Soon -->
-        <div class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-4 relative shadow-sm hover:border-rose-500/50 transition">
-          <div class="flex items-start justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span class="bg-rose-500 text-white text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                <i class="fa-solid fa-triangle-exclamation mr-1"></i> P1 · Khẩn cấp
-              </span>
-              <span class="text-xs font-semibold text-rose-300">Hạn nộp mốc 1</span>
-            </div>
-            <span class="text-xs font-bold text-rose-300 bg-rose-950/80 border border-rose-500/40 px-2 py-0.5 rounded animate-pulse">
-              <i class="fa-regular fa-clock mr-1"></i> 19:30 Hôm nay (16/9)
-            </span>
-          </div>
-          <h3 class="text-sm font-bold text-white mt-2">Nộp Checkpoint 1 (Canvas 4 ô + Link Repo GitHub)</h3>
-          <div class="mt-2 text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/60 text-slate-300">
-            <span class="text-slate-400 font-mono text-[11px] block mb-0.5">📌 Nguồn: Giảng viên Lead Coach (14:15)</span>
-            "Hạn nộp Checkpoint 1 là 19:30 tối nay ngày 16/9. Đội trưởng nộp link repo..."
-          </div>
-          <div class="mt-3 flex items-center justify-between text-xs pt-2 border-t border-rose-500/20">
-            <span class="text-emerald-400 text-[11px]"><i class="fa-solid fa-circle-check mr-1"></i> Nguồn chính thức</span>
-            <button class="text-slate-400 hover:text-white transition flex items-center gap-1 text-[11px]">
-              <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem tin gốc
-            </button>
-          </div>
+      <div class="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span> P1 Khẩn cấp</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> P2 Quan trọng</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> P3 Theo dõi</span>
         </div>
-
-        <!-- P2: Warning Ambiguous -->
-        <div class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-4 relative shadow-sm hover:border-amber-500/50 transition">
-          <div class="flex items-start justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span class="bg-amber-500 text-slate-950 text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                <i class="fa-solid fa-bell mr-1"></i> P2 · Quan trọng
-              </span>
-              <span class="text-xs font-semibold text-amber-300">Bài tập Lab</span>
-            </div>
-            <span class="text-xs font-bold text-amber-400 bg-amber-900/50 border border-amber-500/30 px-2 py-0.5 rounded flex items-center gap-1">
-              <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Cần xác nhận lại giờ
-            </span>
-          </div>
-          <h3 class="text-sm font-bold text-white mt-2">Nộp bài tập Lab 2 trên VLearn</h3>
-          <div class="mt-2 text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/60 text-slate-300">
-            <span class="text-slate-400 font-mono text-[11px] block mb-0.5">📌 Nguồn: TA - Quốc Bảo (16:45)</span>
-            "Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn."
-          </div>
-          <div class="mt-3 flex items-center justify-between text-xs pt-2 border-t border-amber-500/20">
-            <span class="text-amber-400 text-[11px]"><i class="fa-solid fa-circle-info mr-1"></i> Không tự ý bịa giờ cụ thể</span>
-            <button class="text-indigo-400 hover:text-indigo-300 transition text-[11px] font-medium underline">
-              Hỏi lại TA giờ chính xác
-            </button>
-          </div>
-        </div>
-
-        <!-- P2: Long-term Deadline -->
-        <div class="bg-slate-700/30 border border-slate-600/50 rounded-xl p-4 relative shadow-sm hover:border-slate-500 transition">
-          <div class="flex items-start justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span class="bg-slate-600 text-white text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                <i class="fa-solid fa-bookmark mr-1"></i> P2 · Quan trọng
-              </span>
-              <span class="text-xs font-semibold text-slate-300">Khóa AI Spec</span>
-            </div>
-            <span class="text-xs font-semibold text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
-              <i class="fa-regular fa-calendar mr-1"></i> 21:00 Ngày 17/9
-            </span>
-          </div>
-          <h3 class="text-sm font-bold text-white mt-2">Chốt tài liệu spec.md tại Checkpoint 4</h3>
-          <div class="mt-2 text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/60 text-slate-300">
-            <span class="text-slate-400 font-mono text-[11px] block mb-0.5">📌 Nguồn: BTC Hackathon (17:00)</span>
-            "Hạn chốt tài liệu AI Spec (spec.md) là 21:00 ngày 17/9 tại Checkpoint 4..."
-          </div>
-          <div class="mt-3 flex items-center justify-between text-xs pt-2 border-t border-slate-700">
-            <span class="text-emerald-400 text-[11px]"><i class="fa-solid fa-check mr-1"></i> Nguồn chính thức</span>
-            <button class="text-slate-400 hover:text-white transition flex items-center gap-1 text-[11px]">
-              <i class="fa-solid fa-arrow-up-right-from-square"></i> Xem tin gốc
-            </button>
-          </div>
-        </div>
+        <span class="text-[11px] text-slate-500">[HAX G2 · G11] Minh bạch căn cứ & độ tin cậy</span>
       </div>
     </section>
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-slate-800/80 border-t border-slate-700 px-6 py-3 text-center text-xs text-slate-500">
-    Nhóm Magician · Lớp 3A · Mini Hackathon AI Batch 04 · Khắc phục 50% tỉ lệ bỏ lỡ thông tin quan trọng trên Discord
+  <!-- MODAL: Correction Interface (HAX G9: Support efficient correction) -->
+  <div id="correctionModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <div class="flex items-center gap-2 text-white font-bold text-base">
+          <i class="fa-solid fa-pen-to-square text-indigo-400"></i>
+          <span>Can thiệp sửa đổi trực tiếp (HAX G9)</span>
+        </div>
+        <button onclick="closeCorrectionModal()" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300 mb-4">
+        Khi AI trích xuất mốc giờ chưa chính xác hoặc phân loại sai mức ưu tiên, bạn có thể chỉnh sửa trực tiếp:
+      </p>
+
+      <form onsubmit="handleCorrectionSubmit(event)" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Tên công việc (Task):</label>
+          <input type="text" id="editTaskName" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" required>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Thời hạn (Deadline):</label>
+            <input type="text" id="editDeadline" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" required>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Mức ưu tiên:</label>
+            <select id="editPriority" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+              <option value="P1">🔴 P1 · Khẩn cấp</option>
+              <option value="P2">🟡 P2 · Quan trọng</option>
+              <option value="P3">🟢 P3 · Theo dõi</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700/60 text-[11px] text-slate-400">
+          <i class="fa-solid fa-circle-info text-indigo-400 mr-1"></i> Thao tác này sẽ tự động ghi log vào <code>validation/corrections.log</code> để nhóm đánh giá lại prompt.
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeCorrectionModal()" class="px-3 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 font-medium">Hủy</button>
+          <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-500 shadow-md shadow-indigo-600/30">Lưu Thay Đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Flowchart Viewer -->
+  <div id="flowModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-diagram-project text-indigo-400"></i>
+          Sơ Đồ Luồng Hoạt Động (Flowchart — CP2)
+        </h3>
+        <button onclick="toggleFlowModal(false)" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Flowchart Visual Steps -->
+      <div class="space-y-3 text-xs">
+        <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-start gap-3">
+          <span class="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shrink-0">1</span>
+          <div>
+            <h4 class="font-bold text-white">Tin nhắn mới từ Discord Channel</h4>
+            <p class="text-slate-400 mt-0.5">Tiếp nhận mọi tin nhắn từ các kênh chỉ định (`#thông-báo`, `#general`).</p>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-start gap-3">
+          <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0">2</span>
+          <div>
+            <h4 class="font-bold text-white">Bộ lọc tiền xử lý (Pre-filter)</h4>
+            <p class="text-slate-400 mt-0.5">Loại bỏ sticker, emoji, tin chào hỏi, tin ngắn dưới 10 ký tự để tiết kiệm token và chống rác.</p>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-start gap-3">
+          <span class="w-6 h-6 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center text-xs shrink-0">3</span>
+          <div>
+            <h4 class="font-bold text-white">Trích xuất & Kiểm tra căn cứ thời gian</h4>
+            <p class="text-slate-400 mt-0.5">AI bóc tách Task, Deadline, Người gửi. Nếu thời gian mập mờ ("tối nay", "mai"), gắn cờ <code>[⚠️ Cần xác nhận lại]</code> chứ không bịa mốc giờ.</p>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-start gap-3">
+          <span class="w-6 h-6 rounded-full bg-amber-600 text-white font-bold flex items-center justify-center text-xs shrink-0">4</span>
+          <div>
+            <h4 class="font-bold text-white">Phân cấp ưu tiên (P1 / P2 / P3)</h4>
+            <p class="text-slate-400 mt-0.5">🔴 P1 (Khẩn cấp: đổi lịch hoặc hạn <24h) | 🟡 P2 (Quan trọng: bài tập mới) | 🟢 P3 (Theo dõi).</p>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-start gap-3">
+          <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-xs shrink-0">5</span>
+          <div>
+            <h4 class="font-bold text-white">Hiển thị & Hỗ trợ can thiệp (HAX G9 / G11)</h4>
+            <p class="text-slate-400 mt-0.5">Xuất bản tin kèm trích dẫn gốc; người dùng có thể bấm "Xem tin gốc" hoặc "Sửa hạn nộp" để can thiệp trực tiếp.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 pt-3 border-t border-slate-800 text-right">
+        <button onclick="toggleFlowModal(false)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-slate-900 border-t border-slate-800 px-6 py-3 text-center text-xs text-slate-500">
+    Nhóm Magician · Lớp 3A · Phòng E403 · Checkpoint 2: Thiết kế luồng trải nghiệm & Bản mẫu tương tác
   </footer>
 
   <script>
-    function scanMessages() {
-      const btn = document.getElementById('scanBtn');
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang trích xuất AI...';
-      setTimeout(() => {
-        btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> Đã trích xuất xong!';
-        setTimeout(() => {
-          btn.innerHTML = '<i class="fa-solid fa-bolt"></i> <span>Quét & Trích xuất AI</span>';
-        }, 2000);
-      }, 800);
+    // SCENARIO DATA
+    const scenarios = {
+      happy: {
+        chat: [
+          { role: 'GV', name: 'Giảng viên (Lead Coach)', time: '14:15 Hôm nay', text: 'Các nhóm chú ý: Hạn nộp Checkpoint 1 là 19:30 tối nay ngày 16/9. Đội trưởng nộp link repo GitHub công khai và Canvas 4 ô qua form nhé.', type: 'gv' },
+          { role: 'TA', name: 'TA - Minh Hằng', time: '15:30 Hôm nay', text: '🔔 ĐÍNH CHÍNH LỊCH: Buổi Workshop chiều nay dời từ phòng E402 sang phòng E403 lúc 17:30 nhé mọi người!', type: 'ta' },
+          { role: 'HV', name: 'Học viên Nam', time: '16:02', text: 'Ae lát xong lab ra cổng trường làm cốc trà đá không?', type: 'noise' },
+          { role: 'TA', name: 'TA - Quốc Bảo', time: '16:45 Hôm nay', text: 'Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn.', type: 'ta' },
+          { role: 'BC', name: 'BTC Hackathon', time: '17:00 Hôm nay', text: 'Hạn chốt tài liệu AI Spec (spec.md) là 21:00 ngày 17/9 tại Checkpoint 4. Sau thời gian này sẽ khoá quality bar.', type: 'btc' }
+        ],
+        tasks: [
+          {
+            p: 'P1', pText: 'Khẩn cấp', color: 'rose', title: 'Dời Workshop chiều nay sang phòng E403',
+            time: '17:30 Hôm nay', source: 'TA - Minh Hằng (15:30)', quote: '🔔 ĐÍNH CHÍNH LỊCH: Buổi Workshop chiều nay dời từ phòng E402 sang phòng E403...',
+            statusText: 'Đã xác thực từ thông báo TA', warn: false
+          },
+          {
+            p: 'P1', pText: 'Khẩn cấp', color: 'rose', title: 'Nộp Checkpoint 1 (Canvas 4 ô + Link Repo GitHub)',
+            time: '19:30 Hôm nay (16/9)', source: 'Giảng viên Lead Coach (14:15)', quote: 'Hạn nộp Checkpoint 1 là 19:30 tối nay ngày 16/9. Đội trưởng nộp link repo...',
+            statusText: 'Nguồn chính thức · Đếm ngược 25 phút', warn: false
+          },
+          {
+            p: 'P2', pText: 'Quan trọng', color: 'amber', title: 'Nộp bài tập Lab 2 trên VLearn',
+            time: 'Cần xác nhận lại giờ', source: 'TA - Quốc Bảo (16:45)', quote: 'Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn.',
+            statusText: 'Không tự ý bịa giờ cụ thể', warn: true
+          },
+          {
+            p: 'P2', pText: 'Quan trọng', color: 'slate', title: 'Chốt tài liệu spec.md tại Checkpoint 4',
+            time: '21:00 Ngày 17/9', source: 'BTC Hackathon (17:00)', quote: 'Hạn chốt tài liệu AI Spec (spec.md) là 21:00 ngày 17/9 tại Checkpoint 4...',
+            statusText: 'Nguồn chính thức · Hạn chốt chất lượng', warn: false
+          }
+        ]
+      },
+      low: {
+        chat: [
+          { role: 'TA', name: 'TA - Quốc Bảo', time: '16:45', text: 'Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn.', type: 'ta' },
+          { role: 'HV', name: 'Học viên Tuấn', time: '16:46', text: 'Tối nay là mấy giờ thế anh Bảo ơi?', type: 'hv' },
+          { role: 'TA', name: 'TA - Trợ lý', time: '16:48', text: 'Cứ làm đi lát có thông báo sau nhé.', type: 'ta' }
+        ],
+        tasks: [
+          {
+            p: 'P2', pText: 'Cần xác nhận', color: 'amber', title: 'Nộp bài tập Lab 2 trên VLearn',
+            time: '⚠️ Chưa rõ mốc giờ cụ thể', source: 'TA - Quốc Bảo (16:45)', quote: 'Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn.',
+            statusText: 'AI phát hiện thời gian mập mờ · Gắn cờ cảnh báo', warn: true
+          }
+        ]
+      },
+      failure: {
+        chat: [
+          { role: 'HV', name: 'Học viên A', time: '18:10', text: 'Hôm nay trời mưa to quá ae nhỉ', type: 'hv' },
+          { role: 'HV', name: 'Học viên B', time: '18:12', text: 'Chuẩn luôn, tí về ướt hết', type: 'hv' },
+          { role: 'HV', name: 'Học viên C', time: '18:15', text: 'Haha thôi cố học đi', type: 'hv' }
+        ],
+        tasks: []
+      }
+    };
+
+    function loadScenario(type) {
+      document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active', 'bg-indigo-600', 'text-white'));
+      const activeBtn = document.getElementById(`btn-${type}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'bg-indigo-600', 'text-white');
+      }
+
+      const s = scenarios[type];
+      
+      // Render Chat Feed
+      const chatFeed = document.getElementById('chatFeed');
+      chatFeed.innerHTML = s.chat.map(m => `
+        <div class="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-800/60 transition ${m.type === 'noise' ? 'opacity-50' : ''}">
+          <div class="w-8 h-8 rounded-full ${m.type === 'gv' ? 'bg-emerald-600' : m.type === 'ta' ? 'bg-blue-600' : m.type === 'btc' ? 'bg-purple-600' : 'bg-slate-700'} flex items-center justify-center font-bold text-xs text-white shrink-0">
+            ${m.role}
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold ${m.type === 'gv' ? 'text-emerald-400' : m.type === 'ta' ? 'text-blue-400' : m.type === 'btc' ? 'text-purple-400' : 'text-slate-300'} text-xs">${m.name}</span>
+              <span class="text-[10px] text-slate-500">${m.time}</span>
+            </div>
+            <p class="text-slate-200 mt-1 text-xs leading-relaxed">${m.text}</p>
+          </div>
+        </div>
+      `).join('');
+
+      // Render Digest Tasks
+      const digestContainer = document.getElementById('digestContainer');
+      const countBadge = document.getElementById('taskCountText');
+
+      if (s.tasks.length === 0) {
+        countBadge.innerText = '0 việc cần lưu ý';
+        digestContainer.innerHTML = `
+          <div class="h-64 flex flex-col items-center justify-center text-center p-6 bg-slate-900/40 border border-slate-800 rounded-xl">
+            <i class="fa-solid fa-circle-info text-slate-500 text-3xl mb-3"></i>
+            <h4 class="text-sm font-bold text-slate-300">Không có căn cứ thông tin (Failure Path)</h4>
+            <p class="text-xs text-slate-500 max-w-sm mt-1">
+              Không ghi nhận bất kỳ thông báo task hay dời lịch nào từ người có thẩm quyền trong đoạn chat này. AI từ chối trích xuất tự do để bảo đảm tính chuẩn xác.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      countBadge.innerText = `${s.tasks.length} việc cần lưu ý`;
+      digestContainer.innerHTML = s.tasks.map(t => `
+        <div class="bg-slate-800/50 border ${t.color === 'rose' ? 'border-rose-500/30' : t.color === 'amber' ? 'border-amber-500/30' : 'border-slate-700'} rounded-xl p-4 shadow-sm hover:border-indigo-500/40 transition">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="${t.color === 'rose' ? 'bg-rose-500 text-white' : t.color === 'amber' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-200'} text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
+                ${t.p} · ${t.pText}
+              </span>
+            </div>
+            <span class="text-xs font-bold ${t.warn ? 'text-amber-400 bg-amber-950/60 border border-amber-500/30' : 'text-slate-300 bg-slate-800'} px-2.5 py-0.5 rounded flex items-center gap-1">
+              <i class="fa-regular fa-clock"></i> ${t.time}
+            </span>
+          </div>
+
+          <h3 class="text-sm font-bold text-white mt-2">${t.title}</h3>
+
+          <div class="mt-2 text-xs bg-slate-950/60 p-2.5 rounded-lg border border-slate-800 text-slate-300">
+            <span class="text-slate-400 font-mono text-[10px] block mb-0.5">📌 Nguồn: ${t.source}</span>
+            "${t.quote}"
+          </div>
+
+          <div class="mt-3 flex items-center justify-between text-xs pt-2 border-t border-slate-800/80">
+            <span class="${t.warn ? 'text-amber-400' : 'text-emerald-400'} text-[11px] flex items-center gap-1">
+              <i class="fa-solid ${t.warn ? 'fa-triangle-exclamation' : 'fa-circle-check'}"></i> ${t.statusText}
+            </span>
+            <div class="flex items-center gap-2">
+              <button onclick="openCorrectionModal('${t.title}', '${t.time}', '${t.p}')" class="text-indigo-400 hover:text-indigo-300 transition text-[11px] font-medium flex items-center gap-1">
+                <i class="fa-solid fa-pen"></i> Sửa hạn nộp
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
     }
+
+    // Modal Handlers
+    function toggleFlowModal(show) {
+      document.getElementById('flowModal').classList.toggle('hidden', !show);
+    }
+
+    function openCorrectionModal(taskName, deadline, priority) {
+      document.getElementById('editTaskName').value = taskName;
+      document.getElementById('editDeadline').value = deadline;
+      document.getElementById('editPriority').value = priority;
+      document.getElementById('correctionModal').classList.remove('hidden');
+    }
+
+    function closeCorrectionModal() {
+      document.getElementById('correctionModal').classList.add('hidden');
+    }
+
+    function handleCorrectionSubmit(e) {
+      e.preventDefault();
+      alert('✅ Đã lưu sửa đổi! Dữ liệu đính chính được ghi nhận vào validation/corrections.log để cải tiến độ chuẩn xác của AI.');
+      closeCorrectionModal();
+    }
+
+    // Init Happy Path
+    loadScenario('happy');
   </script>
 </body>
 </html>
