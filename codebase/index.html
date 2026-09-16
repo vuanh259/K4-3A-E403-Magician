@@ -1,575 +1,913 @@
 ﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Discord Action Digest — Bản Mẫu Tương Tác & Chatbot (CP2 Prototype)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .custom-scroll::-webkit-scrollbar { width: 6px; }
-    .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Discord Assistant — CP2 Interactive Mock</title>
+<style>
+  :root{
+    --bg:#1e1f22;
+    --panel:#2b2d31;
+    --panel-2:#313338;
+    --panel-3:#232428;
+    --text:#f2f3f5;
+    --muted:#b5bac1;
+    --soft:#949ba4;
+    --brand:#5865f2;
+    --brand-2:#7289da;
+    --green:#23a559;
+    --yellow:#f0b232;
+    --red:#f23f43;
+    --line:#3f4147;
+    --chip:#383a40;
+    --white:#fff;
+  }
+  *{box-sizing:border-box}
+  html, body{
+    height:100%;
+    overflow:hidden;
+  }
+  body{
+    margin:0;
+    background:#111214;
+    color:var(--text);
+    font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  button,input{font:inherit}
+  button{cursor:pointer}
+  .app{
+    height:100vh;
+    min-height:0;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr);
+    background:var(--bg);
+    overflow:hidden;
+  }
+
+  /* top flow bar */
+  .flowbar{
+    background:#18191c;
+    border-bottom:1px solid #2a2c30;
+    padding:14px 18px;
+  }
+  .flowbar-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .flow-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+  .mock-badge{
+    font-size:12px;
+    padding:5px 8px;
+    border-radius:999px;
+    background:#2b2d31;
+    border:1px solid #44464d;
+    color:var(--muted);
+  }
+  .flow-steps{
+    margin-top:12px;
+    display:grid;
+    grid-template-columns:repeat(5, minmax(0,1fr));
+    gap:8px;
+  }
+  .step{
+    background:#232428;
+    border:1px solid #3a3c42;
+    border-radius:12px;
+    padding:10px 12px;
+    min-width:0;
+    transition:.2s ease;
+  }
+  .step .n{
+    display:inline-grid;
+    place-items:center;
+    width:24px;height:24px;
+    border-radius:50%;
+    background:#3b3d44;
+    color:var(--muted);
+    font-weight:800;
+    font-size:12px;
+    margin-bottom:6px;
+  }
+  .step strong{
+    display:block;
+    font-size:13px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .step span{
+    display:block;
+    font-size:11px;
+    color:var(--soft);
+    margin-top:2px;
+  }
+  .step.active{
+    border-color:var(--brand);
+    box-shadow:0 0 0 1px rgba(88,101,242,.25) inset;
+    background:#272a3b;
+  }
+  .step.done{
+    border-color:#2f6e4d;
+    background:#243229;
+  }
+  .step.done .n{background:var(--green); color:#fff}
+  .step.active .n{background:var(--brand); color:#fff}
+
+  .workspace{
+    display:grid;
+    grid-template-columns:72px 240px minmax(0,1fr) 320px;
+    min-height:0;
+    overflow:hidden;
+  }
+  /* servers */
+  .servers{
+    background:#1e1f22;
+    border-right:1px solid #27282c;
+    padding:12px 8px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    align-items:center;
+  }
+  .server{
+    width:48px;height:48px;
+    border-radius:50%;
+    background:#313338;
+    display:grid;
+    place-items:center;
+    font-weight:800;
+    color:#d7d9dc;
+    transition:.18s;
+    border:0;
+  }
+  .server.active{border-radius:16px;background:var(--brand);color:#fff}
+  .server:hover{border-radius:16px;background:#3b3d44}
+  .server.active:hover{background:var(--brand)}
+
+  /* channels */
+  .channels{
+    background:#2b2d31;
+    border-right:1px solid #242529;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+  }
+  .guild-head{
+    height:52px;
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+    border-bottom:1px solid #1f2023;
+    box-shadow:0 1px 0 rgba(0,0,0,.22);
+    font-weight:800;
+  }
+  .channel-list{
+    padding:10px 8px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    min-height:0;
+  }
+  .cat{
+    margin:10px 8px 6px;
+    font-size:11px;
+    color:#949ba4;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+  }
+  .channel{
+    width:100%;
+    border:0;
+    background:transparent;
+    color:#949ba4;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 9px;
+    border-radius:6px;
+    text-align:left;
+    margin-bottom:2px;
+  }
+  .channel:hover,.channel.active{background:#35373c;color:#dbdee1}
+  .channel .hash{font-size:20px;color:#80848e}
+  .channel .dot{
+    margin-left:auto;
+    width:7px;height:7px;border-radius:50%;background:#686d73;
+  }
+  .channel .dot.hot{background:var(--yellow)}
+  .channel .dot.done{background:var(--green)}
+  .profile{
+    margin-top:auto;
+    height:54px;
+    background:#232428;
+    display:flex;
+    align-items:center;
+    padding:7px 8px;
+    gap:8px;
+  }
+  .avatar{
+    width:34px;height:34px;border-radius:50%;
+    display:grid;place-items:center;
+    background:#5865f2;font-weight:800;font-size:12px;
+  }
+  .profile .name{font-size:13px;font-weight:700}
+  .profile .tag{font-size:11px;color:#949ba4}
+
+  /* chat */
+  .chat{
+    background:var(--panel-2);
+    display:grid;
+    grid-template-rows:52px minmax(0,1fr) auto;
+    min-width:0;
+    min-height:0;
+    overflow:hidden;
+  }
+  .chat-head{
+    border-bottom:1px solid #242529;
+    box-shadow:0 1px 0 rgba(0,0,0,.18);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:0 16px;
+    color:#dbdee1;
+  }
+  .chat-head .hash{font-size:24px;color:#80848e}
+  .chat-head strong{font-size:15px}
+  .chat-head span{font-size:12px;color:#949ba4}
+  .messages{
+    padding:18px 18px 8px;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+    scrollbar-color:#1a1b1e #2b2d31;
+  }
+  .messages::-webkit-scrollbar,
+  .channel-list::-webkit-scrollbar,
+  .inspector::-webkit-scrollbar{
+    width:10px;
+  }
+  .messages::-webkit-scrollbar-track,
+  .channel-list::-webkit-scrollbar-track,
+  .inspector::-webkit-scrollbar-track{
+    background:#2b2d31;
+  }
+  .messages::-webkit-scrollbar-thumb,
+  .channel-list::-webkit-scrollbar-thumb,
+  .inspector::-webkit-scrollbar-thumb{
+    background:#17181b;
+    border-radius:8px;
+    border:2px solid #2b2d31;
+  }
+  .messages::-webkit-scrollbar-thumb:hover,
+  .channel-list::-webkit-scrollbar-thumb:hover,
+  .inspector::-webkit-scrollbar-thumb:hover{
+    background:#0f1012;
+  }
+  .message{
+    display:grid;
+    grid-template-columns:40px 1fr;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .message .msg-avatar{
+    width:40px;height:40px;border-radius:50%;
+    display:grid;place-items:center;
+    font-weight:800;
+    font-size:12px;
+  }
+  .message .meta{
+    display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  }
+  .message .author{font-weight:800;font-size:14px}
+  .message .time{font-size:11px;color:#949ba4}
+  .message .content{margin-top:4px;color:#dbdee1;line-height:1.45;font-size:14px}
+  .bot-badge{
+    font-size:10px;
+    color:#fff;
+    background:var(--brand);
+    border-radius:4px;
+    padding:1px 4px;
+  }
+  .command{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:7px 10px;
+    border-radius:6px;
+    background:#3b3d44;
+    color:#e6e8ea;
+    font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size:13px;
+  }
+  .embed{
+    border-left:4px solid var(--brand);
+    background:#2b2d31;
+    border-radius:4px;
+    padding:12px 14px;
+    margin-top:8px;
+    width:min(760px,100%);
+    max-width:100%;
+    overflow:hidden;
+  }
+  .embed h3{font-size:14px;margin:0 0 8px}
+  .summary-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+    margin-top:10px;
+  }
+  .summary-card{
+    background:#232428;
+    border:1px solid #3f4147;
+    border-radius:8px;
+    padding:10px;
+    min-width:0;
+    overflow-wrap:anywhere;
+  }
+  .summary-card .label{
+    font-size:11px;
+    color:#949ba4;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+  .summary-card strong{display:block;margin-top:3px;font-size:14px}
+  .priority-high{color:#ff6b6f}
+  .priority-med{color:#f0b232}
+  .priority-low{color:#23a559}
+  .source{
+    margin-top:7px;
+    font-size:12px;color:#b5bac1;
+  }
+  .source button{
+    margin-top:6px;
+    border:1px solid #4a4d53;
+    background:#313338;
+    color:#dbdee1;
+    border-radius:6px;
+    padding:6px 8px;
+  }
+
+  /* composer */
+  .composer-wrap{padding:0 16px 16px}
+  .slash-help{
+    display:none;
+    margin-bottom:6px;
+    background:#18191c;
+    border:1px solid #3f4147;
+    border-radius:8px;
+    padding:8px;
+  }
+  .slash-help.show{display:block}
+  .slash-option{
+    display:flex;justify-content:space-between;gap:10px;
+    padding:8px;border-radius:6px;
+    background:#2b2d31;
+  }
+  .slash-option strong{font-family:ui-monospace, monospace}
+  .slash-option span{color:#949ba4;font-size:12px}
+  .composer{
+    background:#383a40;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:0 10px;
+  }
+  .composer input{
+    flex:1;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#f2f3f5;
+    padding:13px 4px;
+    min-width:0;
+  }
+  .composer button{
+    border:0;
+    color:#fff;
+    background:var(--brand);
+    border-radius:6px;
+    padding:8px 12px;
+    font-weight:800;
+  }
+  .composer button:disabled{opacity:.55;cursor:not-allowed}
+
+  /* right inspector */
+  .inspector{
+    background:#232428;
+    border-left:1px solid #1f2023;
+    padding:14px;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+  }
+  .inspector h3{
+    margin:2px 0 12px;
+    font-size:14px;
+  }
+  .panel{
+    border:1px solid #3a3c42;
+    border-radius:10px;
+    background:#2b2d31;
+    padding:12px;
+    margin-bottom:10px;
+  }
+  .panel-title{
+    font-size:11px;color:#949ba4;text-transform:uppercase;font-weight:800;
+    letter-spacing:.45px;margin-bottom:8px;
+  }
+  .scan-item{
+    display:grid;
+    grid-template-columns:14px 1fr auto;
+    gap:8px;
+    align-items:center;
+    padding:7px 0;
+    border-bottom:1px solid #37393f;
+    font-size:12px;
+  }
+  .scan-item:last-child{border-bottom:0}
+  .status-dot{width:9px;height:9px;border-radius:50%;background:#5d6169}
+  .status-dot.active{background:var(--yellow);box-shadow:0 0 0 3px rgba(240,178,50,.14)}
+  .status-dot.done{background:var(--green)}
+  .count{color:#949ba4}
+  .progress{
+    height:7px;
+    border-radius:999px;
+    background:#1e1f22;
+    overflow:hidden;
+    margin-top:10px;
+  }
+  .progress > div{
+    height:100%;width:0;background:var(--brand);
+    transition:width .35s ease;
+  }
+  .mini-flow{
+    display:grid;gap:7px;
+  }
+  .mini-node{
+    padding:9px 10px;
+    border-radius:8px;
+    background:#232428;
+    border:1px solid #3a3c42;
+    font-size:12px;
+  }
+  .mini-node.active{border-color:var(--brand);background:#292c3d}
+  .mini-node.done{border-color:#2f6e4d;background:#243229}
+  .arrow{text-align:center;color:#737985;font-size:13px}
+  .legend{
+    font-size:11px;color:#949ba4;line-height:1.5;
+  }
+  .demo-btn{
+    width:100%;
+    border:0;
+    background:var(--brand);
+    color:white;
+    font-weight:800;
+    border-radius:8px;
+    padding:10px 12px;
+    margin-top:8px;
+  }
+  .reset-btn{
+    width:100%;
+    border:1px solid #484b52;
+    background:#313338;color:#dbdee1;
+    font-weight:700;border-radius:8px;padding:9px 12px;margin-top:8px;
+  }
+  .hint{
+    background:#292b31;
+    border:1px dashed #4a4d53;
+    color:#c9ccd1;
+    font-size:12px;
+    border-radius:8px;
+    padding:10px;
+    margin-top:8px;
+  }
+
+  /* modal source */
+  .modal{
+    position:fixed;inset:0;
+    background:rgba(0,0,0,.58);
+    display:none;
+    align-items:center;justify-content:center;
+    padding:18px;
+    z-index:30;
+  }
+  .modal.show{display:flex}
+  .modal-card{
+    width:min(520px,100%);
+    background:#2b2d31;
+    border:1px solid #44464d;
+    border-radius:12px;
+    padding:16px;
+  }
+  .modal-card h4{margin:0 0 10px}
+  .modal-card button{
+    margin-top:12px;
+    border:0;background:var(--brand);color:#fff;border-radius:7px;padding:8px 12px;font-weight:800;
+  }
+
+  @media (max-width:1100px){
+    .workspace{grid-template-columns:64px 220px minmax(0,1fr)}
+    .inspector{grid-column:2 / 4; border-left:0; border-top:1px solid #1f2023}
+  }
+  @media (max-width:760px){
+    .flow-steps{grid-template-columns:1fr}
+    .workspace{grid-template-columns:54px minmax(0,1fr)}
+    .channels{display:none}
+    .inspector{grid-column:1 / 3}
+    .summary-grid{grid-template-columns:1fr}
+  }
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased">
-
-  <!-- Top Navigation Header -->
-  <header class="bg-slate-900 border-b border-slate-800 px-6 py-3.5 sticky top-0 z-30 shadow-lg">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-600/30">
-          <i class="fa-brands fa-discord"></i>
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-base font-bold text-white tracking-tight">Discord Action Digest · Bot Simulator</h1>
-            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-              CP2 Live Interactive Flow
-            </span>
-          </div>
-          <p class="text-xs text-slate-400">
-            Trích xuất tự động Task, Deadline, Lịch đổi & Phân cấp ưu tiên từ tin nhắn Discord
-          </p>
-        </div>
+<body>
+<div class="app">
+  <header class="flowbar">
+    <div class="flowbar-top">
+      <div class="flow-title">
+        <span>AI Discord Assistant — CP2 Interactive Mock</span>
+        <span class="mock-badge">MOCK · không kết nối Discord thật</span>
       </div>
-
-      <div class="flex items-center gap-3">
-        <span class="text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
-          <b>Nhóm:</b> Magician · Lớp 3A · E403
-        </span>
-        <button onclick="toggleFlowModal(true)" class="text-xs font-semibold px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1.5">
-          <i class="fa-solid fa-diagram-project text-indigo-400"></i> Xem Sơ Đồ Luồng
-        </button>
-      </div>
+      <div style="font-size:12px;color:#949ba4">Nhóm Magician · Track B</div>
+    </div>
+    <div class="flow-steps" aria-label="Sơ đồ luồng từ đầu đến cuối">
+      <div class="step active" data-step="1"><div class="n">1</div><strong>Gõ /summary</strong><span>Ngay trong Discord</span></div>
+      <div class="step" data-step="2"><div class="n">2</div><strong>Quét tất cả channel</strong><span>Trong phạm vi được cấp quyền</span></div>
+      <div class="step" data-step="3"><div class="n">3</div><strong>AI phân tích</strong><span>Task · deadline · lịch</span></div>
+      <div class="step" data-step="4"><div class="n">4</div><strong>Kiểm tra độ chắc chắn</strong><span>Confidence + grounding</span></div>
+      <div class="step" data-step="5"><div class="n">5</div><strong>Trả kết quả trong chat</strong><span>Ưu tiên + nguồn gốc</span></div>
     </div>
   </header>
 
-  <!-- Quick Prompts Bar -->
-  <section class="bg-slate-900/90 border-b border-slate-800 px-6 py-2.5">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-2 text-xs">
-      <span class="text-slate-400 font-bold uppercase tracking-wider text-[11px] mr-1">Bấm thử câu mẫu:</span>
-      
-      <button onclick="sendQuickMessage('tìm cho tôi những vấn đề quan trọng hôm nay')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 font-semibold transition flex items-center gap-1.5">
-        <i class="fa-solid fa-bolt"></i> "tìm cho tôi những vấn đề quan trọng hôm nay"
-      </button>
+  <main class="workspace">
+    <aside class="servers" aria-label="Danh sách server">
+      <button class="server active" title="VinUni AI">AI</button>
+      <button class="server" title="Team">MG</button>
+      <button class="server" title="Study">ST</button>
+    </aside>
 
-      <button onclick="sendQuickMessage('khi nào nộp lab 2?')" class="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-600 hover:text-white border border-amber-500/30 font-semibold transition flex items-center gap-1.5">
-        <i class="fa-solid fa-clock"></i> "khi nào nộp lab 2?" (Low-confidence)
-      </button>
+    <aside class="channels">
+      <div class="guild-head">VinUni AI Training</div>
+      <div class="channel-list">
+        <div class="cat">Thông báo</div>
+        <button class="channel active" data-channel="announcements"><span class="hash">#</span>announcements <span class="dot hot"></span></button>
+        <button class="channel" data-channel="class-3a"><span class="hash">#</span>class-3a <span class="dot hot"></span></button>
 
-      <button onclick="sendQuickMessage('có lịch nào bị đổi không?')" class="px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/30 font-semibold transition flex items-center gap-1.5">
-        <i class="fa-solid fa-triangle-exclamation"></i> "có lịch nào bị đổi không?" (P1 Khẩn cấp)
-      </button>
+        <div class="cat">Học tập</div>
+        <button class="channel" data-channel="lab-support"><span class="hash">#</span>lab-support <span class="dot hot"></span></button>
+        <button class="channel" data-channel="resources"><span class="hash">#</span>resources <span class="dot"></span></button>
 
-      <button onclick="sendQuickMessage('giải thích thuật toán Transformer cho tôi')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200 border border-slate-700 font-medium transition flex items-center gap-1.5">
-        <i class="fa-solid fa-circle-question"></i> "giải thích Transformer cho tôi" (Out-of-scope)
-      </button>
-    </div>
-  </section>
+        <div class="cat">Nhóm</div>
+        <button class="channel" data-channel="team-magician"><span class="hash">#</span>team-magician <span class="dot hot"></span></button>
+        <button class="channel" data-channel="random"><span class="hash">#</span>random <span class="dot"></span></button>
+      </div>
+      <div class="profile">
+        <div class="avatar">VA</div>
+        <div><div class="name">Viet Anh</div><div class="tag">online</div></div>
+      </div>
+    </aside>
 
-  <!-- Main Workspace: Discord Simulator Layout -->
-  <main class="max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1">
-    
-    <!-- LEFT PANEL: Discord Channels & Raw Feed -->
-    <section class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col h-[740px] shadow-xl">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-hashtag text-slate-400"></i>
-          <span class="font-bold text-slate-200 text-sm">thông-báo-chung</span>
-        </div>
-        <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">
-          Kênh nguồn
-        </span>
+    <section class="chat">
+      <div class="chat-head">
+        <span class="hash">#</span>
+        <strong>announcements</strong>
+        <span>Thông báo chung của khóa học</span>
       </div>
 
-      <div class="flex-1 overflow-y-auto custom-scroll space-y-3 py-3 pr-1 text-xs">
-        <div class="p-2.5 rounded-xl bg-slate-800/40 border border-slate-800">
-          <div class="flex items-center justify-between text-slate-400 text-[10px] mb-1">
-            <span class="font-bold text-emerald-400">Giảng viên Lead Coach</span>
-            <span>14:15</span>
-          </div>
-          <p class="text-slate-300">Các nhóm chú ý: Hạn nộp Checkpoint 1 là 19:30 tối nay ngày 16/9. Đội trưởng nộp link repo GitHub và Canvas 4 ô qua form nhé.</p>
-        </div>
-
-        <div class="p-2.5 rounded-xl bg-slate-800/40 border border-slate-800">
-          <div class="flex items-center justify-between text-slate-400 text-[10px] mb-1">
-            <span class="font-bold text-blue-400">TA - Minh Hằng</span>
-            <span>15:30</span>
-          </div>
-          <p class="text-slate-300">🔔 ĐÍNH CHÍNH LỊCH: Buổi Workshop chiều nay dời từ phòng E402 sang phòng E403 lúc 17:30 nhé mọi người!</p>
-        </div>
-
-        <div class="p-2.5 rounded-xl bg-slate-800/40 border border-slate-800">
-          <div class="flex items-center justify-between text-slate-400 text-[10px] mb-1">
-            <span class="font-bold text-blue-400">TA - Quốc Bảo</span>
-            <span>16:45</span>
-          </div>
-          <p class="text-slate-300">Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn.</p>
-        </div>
-
-        <div class="p-2.5 rounded-xl bg-slate-800/40 border border-slate-800">
-          <div class="flex items-center justify-between text-slate-400 text-[10px] mb-1">
-            <span class="font-bold text-purple-400">BTC Hackathon</span>
-            <span>17:00</span>
-          </div>
-          <p class="text-slate-300">Hạn chốt tài liệu AI Spec (spec.md) là 21:00 ngày 17/9 tại Checkpoint 4. Sau thời gian này sẽ khoá quality bar.</p>
-        </div>
-
-        <div class="p-2.5 rounded-xl bg-slate-800/20 border border-slate-800/60 opacity-60">
-          <div class="flex items-center justify-between text-slate-500 text-[10px] mb-1">
-            <span>Học viên Nam</span>
-            <span>17:05</span>
-          </div>
-          <p class="text-slate-400">Ae tối xong có đi uống trà đá không?</p>
-        </div>
-      </div>
-
-      <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
-        <span><i class="fa-solid fa-filter text-indigo-400"></i> Lọc 1.092 tin tự động</span>
-        <span class="text-emerald-400 font-medium">Pre-filter: ON</span>
-      </div>
-    </section>
-
-    <!-- RIGHT PANEL: Interactive Discord Chat with Action Digest Bot -->
-    <section class="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-2xl flex flex-col h-[740px] shadow-xl overflow-hidden">
-      <!-- Chat Header -->
-      <div class="bg-slate-900/90 border-b border-slate-800 px-5 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="relative">
-            <div class="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm text-white">
-              <i class="fa-solid fa-robot"></i>
-            </div>
-            <span class="w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full absolute -bottom-0.5 -right-0.5"></span>
-          </div>
+      <div class="messages" id="messages">
+        <article class="message">
+          <div class="msg-avatar" style="background:#ed4245">LC</div>
           <div>
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-white text-sm">Trợ lý Action Digest</span>
-              <span class="bg-indigo-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase">BOT</span>
-            </div>
-            <span class="text-[11px] text-slate-400">Trực tuyến · Sẵn sàng trích xuất Task, Deadline & Lịch đổi</span>
+            <div class="meta"><span class="author">Lab Coach</span><span class="time">18:10</span></div>
+            <div class="content">Nhớ hoàn thành Lab 5 và nộp trước <strong>21:00 hôm nay</strong> nhé.</div>
+          </div>
+        </article>
+
+        <article class="message">
+          <div class="msg-avatar" style="background:#23a559">TA</div>
+          <div>
+            <div class="meta"><span class="author">TA Minh</span><span class="time">18:16</span></div>
+            <div class="content">Ngày mai lớp đổi phòng từ <strong>E403 sang E402</strong>.</div>
+          </div>
+        </article>
+
+        <article class="message">
+          <div class="msg-avatar" style="background:#5865f2">SV</div>
+          <div>
+            <div class="meta"><span class="author">Student A</span><span class="time">18:20</span></div>
+            <div class="content">Ai đi ăn tối không :))</div>
+          </div>
+        </article>
+      </div>
+
+      <div class="composer-wrap">
+        <div class="slash-help" id="slashHelp">
+          <div class="slash-option">
+            <div><strong>/summary all</strong><div style="font-size:12px;color:#949ba4;margin-top:2px">Quét tất cả channel được phép và tổng hợp việc quan trọng.</div></div>
+            <span>AI Discord Assistant</span>
           </div>
         </div>
-
-        <button onclick="clearChat()" class="text-xs text-slate-400 hover:text-slate-200 transition">
-          <i class="fa-solid fa-rotate-right mr-1"></i> Làm mới chat
-        </button>
-      </div>
-
-      <!-- Messages Thread -->
-      <div class="flex-1 overflow-y-auto custom-scroll p-5 space-y-4" id="chatThread">
-        <!-- Injected via JS -->
-      </div>
-
-      <!-- Typing Indicator -->
-      <div id="typingIndicator" class="px-5 py-1 text-[11px] text-indigo-400 italic hidden flex items-center gap-2">
-        <i class="fa-solid fa-ellipsis fa-fade"></i>
-        <span>Trợ lý Action Digest đang đọc tin nhắn và phân tích...</span>
-      </div>
-
-      <!-- Message Input Box (Discord Style) -->
-      <div class="p-4 bg-slate-900 border-t border-slate-800">
-        <form onsubmit="handleChatSubmit(event)" class="relative flex items-center">
-          <input 
-            type="text" 
-            id="chatInput"
-            placeholder="Gõ lệnh hoặc câu hỏi... (vd: tìm cho tôi những vấn đề quan trọng hôm nay)" 
-            class="w-full bg-slate-800/90 border border-slate-700 rounded-xl px-4 py-3 pr-24 text-xs sm:text-sm text-white focus:outline-none focus:border-indigo-500 transition shadow-inner placeholder-slate-500"
-            autocomplete="off"
-          />
-          <div class="absolute right-2 flex items-center gap-1">
-            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-md shadow-indigo-600/30">
-              <span>Gửi</span>
-              <i class="fa-solid fa-arrow-up text-[10px]"></i>
-            </button>
-          </div>
-        </form>
-        <div class="flex items-center justify-between mt-2 text-[10px] text-slate-500 px-1">
-          <span>Gõ phím <b>Enter</b> để gửi · Thao tác trực tiếp trên bản mẫu CP2</span>
-          <span>HAX G9: Hỗ trợ sửa sai trực tiếp</span>
+        <div class="composer">
+          <input id="commandInput" aria-label="Nhập lệnh Discord" placeholder="Nhắn tin #announcements — thử gõ /summary all" />
+          <button id="sendBtn" type="button">Gửi</button>
         </div>
       </div>
     </section>
 
+    <aside class="inspector">
+      <h3>Luồng xử lý AI</h3>
+
+      <div class="panel">
+        <div class="panel-title">Demo nhanh</div>
+        <div class="legend">Bấm nút dưới để người xem thấy toàn bộ hành trình từ slash command → quét channel → AI phân tích → kết quả trả lại ngay trong chat.</div>
+        <button class="demo-btn" id="demoBtn" type="button">▶ Chạy demo từ đầu đến cuối</button>
+        <button class="reset-btn" id="resetBtn" type="button">↺ Reset demo</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Quét tất cả channel</div>
+        <div id="scanList">
+          <div class="scan-item" data-scan="announcements"><span class="status-dot"></span><span>#announcements</span><span class="count">12 msg</span></div>
+          <div class="scan-item" data-scan="class-3a"><span class="status-dot"></span><span>#class-3a</span><span class="count">27 msg</span></div>
+          <div class="scan-item" data-scan="lab-support"><span class="status-dot"></span><span>#lab-support</span><span class="count">18 msg</span></div>
+          <div class="scan-item" data-scan="resources"><span class="status-dot"></span><span>#resources</span><span class="count">8 msg</span></div>
+          <div class="scan-item" data-scan="team-magician"><span class="status-dot"></span><span>#team-magician</span><span class="count">31 msg</span></div>
+          <div class="scan-item" data-scan="random"><span class="status-dot"></span><span>#random</span><span class="count">14 msg</span></div>
+        </div>
+        <div class="progress"><div id="progressBar"></div></div>
+        <div id="scanStatus" style="margin-top:8px;font-size:12px;color:#949ba4">Chưa bắt đầu</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Sơ đồ logic</div>
+        <div class="mini-flow">
+          <div class="mini-node active" data-node="1">1. User gõ <strong>/summary all</strong></div>
+          <div class="arrow">↓</div>
+          <div class="mini-node" data-node="2">2. Bot quét các channel được cấp quyền</div>
+          <div class="arrow">↓</div>
+          <div class="mini-node" data-node="3">3. AI trích xuất task / deadline / schedule</div>
+          <div class="arrow">↓</div>
+          <div class="mini-node" data-node="4">4. Kiểm tra confidence + grounding</div>
+          <div class="arrow">↓</div>
+          <div class="mini-node" data-node="5">5. Bot trả summary vào chính đoạn chat</div>
+        </div>
+      </div>
+
+      <div class="hint">
+        <strong>Nguyên tắc CP2:</strong> Đây là mock tương tác. CP2 chưa cần AI thật; CP3 mới thay phần giả lập bằng LLM và đo Recall/Precision.
+      </div>
+    </aside>
   </main>
+</div>
 
-  <!-- Correction Modal (HAX G9) -->
-  <div id="correctionModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-        <div class="flex items-center gap-2 text-white font-bold text-base">
-          <i class="fa-solid fa-pen-to-square text-indigo-400"></i>
-          <span>Can thiệp sửa đổi trực tiếp (HAX G9)</span>
-        </div>
-        <button onclick="closeCorrectionModal()" class="text-slate-400 hover:text-white transition">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <p class="text-xs text-slate-300 mb-4">
-        Khi AI trích xuất mốc giờ chưa chính xác hoặc phân loại sai mức ưu tiên, bạn có thể chỉnh sửa trực tiếp:
-      </p>
-
-      <form onsubmit="handleCorrectionSubmit(event)" class="space-y-4 text-xs">
-        <div>
-          <label class="block font-semibold text-slate-300 mb-1">Tên công việc (Task):</label>
-          <input type="text" id="editTaskName" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" required>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Thời hạn (Deadline):</label>
-            <input type="text" id="editDeadline" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500" required>
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Mức ưu tiên:</label>
-            <select id="editPriority" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
-              <option value="P1">🔴 P1 · Khẩn cấp</option>
-              <option value="P2">🟡 P2 · Quan trọng</option>
-              <option value="P3">🟢 P3 · Theo dõi</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="p-3 bg-slate-800/50 rounded-lg border border-slate-700/60 text-[11px] text-slate-400">
-          <i class="fa-solid fa-circle-info text-indigo-400 mr-1"></i> Thao tác này sẽ tự động ghi log vào <code>validation/corrections.log</code> để nhóm đánh giá lại prompt.
-        </div>
-
-        <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" onclick="closeCorrectionModal()" class="px-3 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 font-medium">Hủy</button>
-          <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-500 shadow-md shadow-indigo-600/30">Lưu Thay Đổi</button>
-        </div>
-      </form>
-    </div>
+<div class="modal" id="sourceModal" role="dialog" aria-modal="true" aria-labelledby="sourceTitle">
+  <div class="modal-card">
+    <h4 id="sourceTitle">Message nguồn</h4>
+    <div id="sourceBody" style="font-size:14px;line-height:1.5;color:#dbdee1"></div>
+    <button id="closeModal" type="button">Đóng</button>
   </div>
+</div>
 
-  <!-- Flowchart Modal -->
-  <div id="flowModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-diagram-project text-indigo-400"></i>
-          Sơ Đồ Luồng Hoạt Động (Flowchart — CP2)
-        </h3>
-        <button onclick="toggleFlowModal(false)" class="text-slate-400 hover:text-white transition">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
+<script>
+(() => {
+  const input = document.getElementById('commandInput');
+  const send = document.getElementById('sendBtn');
+  const demoBtn = document.getElementById('demoBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const slashHelp = document.getElementById('slashHelp');
+  const messages = document.getElementById('messages');
+  const progressBar = document.getElementById('progressBar');
+  const scanStatus = document.getElementById('scanStatus');
+  const steps = [...document.querySelectorAll('.step')];
+  const nodes = [...document.querySelectorAll('.mini-node')];
+  const scanItems = [...document.querySelectorAll('.scan-item')];
+  const modal = document.getElementById('sourceModal');
+  const sourceBody = document.getElementById('sourceBody');
+  const closeModal = document.getElementById('closeModal');
 
-      <div class="space-y-3 text-xs">
-        <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-start gap-3">
-          <span class="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center text-xs shrink-0">1</span>
-          <div>
-            <h4 class="font-bold text-white">Tin nhắn mới từ Discord</h4>
-            <p class="text-slate-400 mt-0.5">Tiếp nhận mọi tin nhắn từ các kênh chỉ định (`#thông-báo`, `#general`).</p>
-          </div>
+  let running = false;
+  let timers = [];
+
+  const sleep = ms => new Promise(r => {
+    const id = setTimeout(r, ms);
+    timers.push(id);
+  });
+
+  function setStep(n){
+    steps.forEach((el,i)=>{
+      el.classList.toggle('active', i === n-1);
+      el.classList.toggle('done', i < n-1);
+    });
+    nodes.forEach((el,i)=>{
+      el.classList.toggle('active', i === n-1);
+      el.classList.toggle('done', i < n-1);
+    });
+  }
+
+  function addMessage({avatar='VA', color='#5865f2', author='Viet Anh', bot=false, html=''}) {
+    const el = document.createElement('article');
+    el.className = 'message';
+    el.innerHTML = `
+      <div class="msg-avatar" style="background:${color}">${avatar}</div>
+      <div>
+        <div class="meta">
+          <span class="author">${author}</span>
+          ${bot ? '<span class="bot-badge">BOT</span>' : ''}
+          <span class="time">bây giờ</span>
         </div>
+        <div class="content">${html}</div>
+      </div>`;
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+    return el;
+  }
 
-        <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-start gap-3">
-          <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0">2</span>
-          <div>
-            <h4 class="font-bold text-white">Bộ lọc tiền xử lý (Pre-filter)</h4>
-            <p class="text-slate-400 mt-0.5">Loại bỏ sticker, icon, tin chào hỏi, tin ngắn dưới 10 ký tự.</p>
-          </div>
-        </div>
+  function resetDemo(){
+    timers.forEach(clearTimeout);
+    timers = [];
+    running = false;
+    send.disabled = false;
+    demoBtn.disabled = false;
+    input.disabled = false;
+    input.value = '';
+    slashHelp.classList.remove('show');
+    progressBar.style.width = '0%';
+    scanStatus.textContent = 'Chưa bắt đầu';
+    scanItems.forEach(item=>{
+      const dot = item.querySelector('.status-dot');
+      dot.classList.remove('active','done');
+    });
+    setStep(1);
+    [...messages.querySelectorAll('.message.generated')].forEach(x=>x.remove());
+  }
 
-        <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-start gap-3">
-          <span class="w-6 h-6 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center text-xs shrink-0">3</span>
-          <div>
-            <h4 class="font-bold text-white">Trích xuất & Chống bịa đặt (Zero Hallucination)</h4>
-            <p class="text-slate-400 mt-0.5">Nếu thời gian mập mờ, AI gắn cờ `[⚠️ Cần xác nhận lại]` chứ không tự bịa giờ.</p>
-          </div>
-        </div>
+  function markGenerated(el){ el.classList.add('generated'); }
 
-        <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-start gap-3">
-          <span class="w-6 h-6 rounded-full bg-amber-600 text-white font-bold flex items-center justify-center text-xs shrink-0">4</span>
-          <div>
-            <h4 class="font-bold text-white">Phân cấp ưu tiên (P1 / P2 / P3)</h4>
-            <p class="text-slate-400 mt-0.5">🔴 P1 (Khẩn cấp: đổi lịch hoặc hạn <24h) · 🟡 P2 (Bài tập) · 🟢 P3 (Theo dõi).</p>
-          </div>
-        </div>
+  async function runFlow(fromDemo=false){
+    if(running) return;
+    const command = input.value.trim() || (fromDemo ? '/summary all' : '');
+    if(!command.startsWith('/summary')){
+      slashHelp.classList.add('show');
+      return;
+    }
 
-        <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700 flex items-start gap-3">
-          <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-xs shrink-0">5</span>
-          <div>
-            <h4 class="font-bold text-white">Hiển thị Embed & Hỗ trợ can thiệp (HAX G9 / G11)</h4>
-            <p class="text-slate-400 mt-0.5">Xuất bản tin kèm trích dẫn gốc; người dùng có thể bấm "Xem tin gốc" hoặc "Sửa hạn nộp".</p>
-          </div>
-        </div>
-      </div>
+    running = true;
+    send.disabled = true;
+    demoBtn.disabled = true;
+    input.disabled = true;
+    slashHelp.classList.remove('show');
 
-      <div class="mt-4 pt-3 border-t border-slate-800 text-right">
-        <button onclick="toggleFlowModal(false)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold">
-          Đóng
-        </button>
-      </div>
-    </div>
-  </div>
+    setStep(1);
+    const userMsg = addMessage({
+      html:`<span class="command">${command}</span>`
+    });
+    markGenerated(userMsg);
 
-  <script>
-    // Initial welcome message from bot
-    const initialThread = [
-      {
-        sender: 'bot',
-        name: 'Trợ lý Action Digest',
-        avatar: 'fa-robot',
-        time: 'Vừa xong',
-        type: 'text',
-        content: 'Xin chào! Mình là **Trợ lý Action Digest** của nhóm Magician. Bạn có thể hỏi mình: *"tìm cho tôi những vấn đề quan trọng hôm nay"*, *"khi nào nộp lab 2?"*, hoặc *"có lịch nào bị đổi không?"* để mình trích xuất ngay lập tức nhé!'
-      }
-    ];
+    await sleep(650);
+    setStep(2);
+    const botThinking = addMessage({
+      avatar:'AI', color:'#5865f2', author:'AI Discord Assistant', bot:true,
+      html:`Đang quét <strong>tất cả channel được cấp quyền</strong> để tìm task, deadline và thay đổi lịch...`
+    });
+    markGenerated(botThinking);
 
-    let messages = [...initialThread];
+    for(let i=0;i<scanItems.length;i++){
+      const dot=scanItems[i].querySelector('.status-dot');
+      dot.classList.add('active');
+      scanStatus.textContent = `Đang quét ${scanItems[i].querySelector('span:nth-child(2)').textContent}...`;
+      progressBar.style.width = `${Math.round((i/scanItems.length)*100)}%`;
+      await sleep(430);
+      dot.classList.remove('active');
+      dot.classList.add('done');
+    }
+    progressBar.style.width='100%';
+    scanStatus.textContent='Đã quét 6 channel · 110 message';
 
-    function renderThread() {
-      const container = document.getElementById('chatThread');
-      container.innerHTML = messages.map((m, idx) => {
-        if (m.sender === 'user') {
-          return `
-            <div class="flex items-start gap-3 justify-end">
-              <div class="bg-indigo-600 text-white p-3 rounded-2xl rounded-tr-none max-w-lg text-xs sm:text-sm shadow-md">
-                ${m.content}
-              </div>
-              <div class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold text-xs shrink-0">
-                Bạn
-              </div>
+    await sleep(500);
+    setStep(3);
+    const analysisMsg = addMessage({
+      avatar:'AI', color:'#5865f2', author:'AI Discord Assistant', bot:true,
+      html:`Đã thu thập message. Đang phân loại <strong>actionable / informational / noise</strong> và trích xuất dữ kiện...`
+    });
+    markGenerated(analysisMsg);
+
+    await sleep(800);
+    setStep(4);
+    const verifyMsg = addMessage({
+      avatar:'AI', color:'#5865f2', author:'AI Discord Assistant', bot:true,
+      html:`Kiểm tra <strong>confidence + grounding</strong>: chỉ giữ các mục có nguồn rõ ràng; nội dung mơ hồ được gắn <strong>Needs review</strong>.`
+    });
+    markGenerated(verifyMsg);
+
+    await sleep(800);
+    setStep(5);
+
+    const resultHTML = `
+      <div class="embed">
+        <h3>📌 Summary từ tất cả channel</h3>
+        <div style="font-size:12px;color:#949ba4">Đã quét 6 channel · 110 message · 4 mục quan trọng</div>
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="label">🔴 High · Task</div>
+            <strong>Hoàn thành Lab 5</strong>
+            <div style="margin-top:4px">Deadline: <b>21:00 hôm nay</b></div>
+            <div class="source">Nguồn: #announcements · Lab Coach<br>
+              <button type="button" data-source="Lab Coach — #announcements — “Nhớ hoàn thành Lab 5 và nộp trước 21:00 hôm nay nhé.”">Xem message gốc</button>
             </div>
-          `;
-        } else {
-          // Bot response
-          return `
-            <div class="flex items-start gap-3">
-              <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs shrink-0 shadow-md">
-                <i class="fa-solid ${m.avatar}"></i>
-              </div>
-              <div class="flex-1 space-y-2 max-w-2xl">
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-white text-xs">${m.name}</span>
-                  <span class="bg-indigo-600 text-white text-[9px] font-extrabold px-1 rounded uppercase">BOT</span>
-                  <span class="text-[10px] text-slate-500">${m.time}</span>
-                </div>
+          </div>
 
-                ${m.type === 'digest' ? renderDigestCard(m.data) : `
-                  <div class="bg-slate-800/80 border border-slate-700/80 p-3.5 rounded-2xl rounded-tl-none text-xs text-slate-200 leading-relaxed shadow-sm">
-                    ${m.content}
-                  </div>
-                `}
-              </div>
+          <div class="summary-card">
+            <div class="label">🟠 Medium · Schedule</div>
+            <strong>Đổi phòng học</strong>
+            <div style="margin-top:4px"><b>E403 → E402</b> · ngày mai</div>
+            <div class="source">Nguồn: #class-3a · TA Minh<br>
+              <button type="button" data-source="TA Minh — #class-3a — “Ngày mai lớp đổi phòng từ E403 sang E402.”">Xem message gốc</button>
             </div>
-          `;
-        }
-      }).join('');
-
-      container.scrollTop = container.scrollHeight;
-    }
-
-    function renderDigestCard(data) {
-      return `
-        <div class="bg-slate-900 border-l-4 border-indigo-500 border border-slate-800 rounded-xl p-4 shadow-xl space-y-3">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-            <span class="font-extrabold text-xs text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-bolt"></i> BẢN TIN ACTION DIGEST — HÔM NAY
-            </span>
-            <span class="text-[11px] text-slate-400 bg-slate-800 px-2.5 py-0.5 rounded-full">
-              ${data.length} việc cần lưu ý
-            </span>
           </div>
 
-          <div class="space-y-3 pt-1">
-            ${data.map(item => `
-              <div class="bg-slate-800/60 border ${item.color === 'rose' ? 'border-rose-500/30' : item.color === 'amber' ? 'border-amber-500/30' : 'border-slate-700'} rounded-lg p-3 text-xs hover:border-indigo-500/40 transition">
-                <div class="flex items-start justify-between gap-2">
-                  <span class="${item.color === 'rose' ? 'bg-rose-500 text-white' : item.color === 'amber' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-200'} text-[10px] font-extrabold px-1.5 py-0.5 rounded uppercase">
-                    ${item.p} · ${item.pText}
-                  </span>
-                  <span class="font-bold ${item.warn ? 'text-amber-400 bg-amber-950/60 border border-amber-500/30' : 'text-slate-300 bg-slate-800'} px-2 py-0.5 rounded text-[11px]">
-                    <i class="fa-regular fa-clock mr-1"></i> ${item.time}
-                  </span>
-                </div>
-
-                <h4 class="font-bold text-white mt-1.5 text-xs sm:text-sm">${item.title}</h4>
-
-                <div class="mt-1.5 p-2 rounded bg-slate-950/60 text-slate-300 text-[11px] border border-slate-800">
-                  <span class="text-slate-400 font-mono text-[10px] block mb-0.5">📌 Nguồn: ${item.source}</span>
-                  "${item.quote}"
-                </div>
-
-                <div class="mt-2.5 flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-800/80">
-                  <span class="${item.warn ? 'text-amber-400' : 'text-emerald-400'} flex items-center gap-1">
-                    <i class="fa-solid ${item.warn ? 'fa-triangle-exclamation' : 'fa-circle-check'}"></i> ${item.statusText}
-                  </span>
-                  <button onclick="openCorrectionModal('${item.title}', '${item.time}', '${item.p}')" class="text-indigo-400 hover:text-indigo-300 transition font-semibold flex items-center gap-1">
-                    <i class="fa-solid fa-pen text-[10px]"></i> Sửa hạn nộp
-                  </button>
-                </div>
-              </div>
-            `).join('')}
+          <div class="summary-card">
+            <div class="label">🔴 High · Team</div>
+            <strong>Họp team chốt demo</strong>
+            <div style="margin-top:4px">Thời gian: <b>20:30 hôm nay</b></div>
+            <div class="source">Nguồn: #team-magician · Team Lead<br>
+              <button type="button" data-source="Team Lead — #team-magician — “20:30 tối nay họp team để chốt demo CP2.”">Xem message gốc</button>
+            </div>
           </div>
 
-          <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-            <span>[HAX G11] Căn cứ 100% từ tin nhắn thông báo chính thức</span>
-            <span class="text-indigo-400 font-semibold">Tự động làm mới</span>
+          <div class="summary-card">
+            <div class="label">🟡 Needs review</div>
+            <strong>“Tối mai làm nhé”</strong>
+            <div style="margin-top:4px">Không rõ đây là task hay chat thông thường.</div>
+            <div class="source">Nguồn: #team-magician · Student B<br>
+              <button type="button" data-source="Student B — #team-magician — “Tối mai làm nhé.” — AI không đủ căn cứ để tự kết luận.">Xem message gốc</button>
+            </div>
           </div>
         </div>
-      `;
-    }
+        <div style="margin-top:10px;font-size:12px;color:#b5bac1">
+          💡 AI chỉ hỗ trợ lọc và ưu tiên. User vẫn có thể mở message nguồn để xác nhận.
+        </div>
+      </div>`;
+    const resultMsg = addMessage({
+      avatar:'AI', color:'#5865f2', author:'AI Discord Assistant', bot:true,
+      html:resultHTML
+    });
+    markGenerated(resultMsg);
 
-    function handleChatSubmit(e) {
-      if (e) e.preventDefault();
-      const input = document.getElementById('chatInput');
-      const text = input.value.trim();
-      if (!text) return;
-
-      // Add user message
-      messages.push({
-        sender: 'user',
-        content: text,
-        time: 'Bây giờ'
+    resultMsg.querySelectorAll('[data-source]').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        sourceBody.textContent = btn.dataset.source;
+        modal.classList.add('show');
       });
-      input.value = '';
-      renderThread();
+    });
 
-      // Show typing indicator
-      const typing = document.getElementById('typingIndicator');
-      typing.classList.remove('hidden');
+    input.disabled=false;
+    input.value='';
+    send.disabled=false;
+    demoBtn.disabled=false;
+    running=false;
+  }
 
-      setTimeout(() => {
-        typing.classList.add('hidden');
-        generateBotResponse(text);
-        renderThread();
-      }, 700);
-    }
+  input.addEventListener('input',()=>{
+    slashHelp.classList.toggle('show', input.value.trim().startsWith('/'));
+  });
 
-    function sendQuickMessage(text) {
-      document.getElementById('chatInput').value = text;
-      handleChatSubmit();
-    }
-
-    function generateBotResponse(query) {
-      const q = query.toLowerCase();
-
-      // 1. Out of Scope
-      if (q.includes('giải thích') || q.includes('transformer') || q.includes('attention') || q.includes('code')) {
-        messages.push({
-          sender: 'bot',
-          name: 'Trợ lý Action Digest',
-          avatar: 'fa-robot',
-          time: 'Bây giờ',
-          type: 'text',
-          content: '🤖 <b>[Phản hồi ngoài phạm vi — HAX G1]</b><br>Mình là Trợ lý Action Digest chuyên trích xuất <b>Task, Deadline & Lịch đổi</b> từ Discord.<br>Để hỏi bài học hoặc giải thích kiến thức, bạn vui lòng liên hệ <b>VLearn Tutor</b> hoặc TA nhé!'
-        });
-        return;
-      }
-
-      // 2. Specific Lab 2 question (Ambiguous time)
-      if (q.includes('lab 2')) {
-        messages.push({
-          sender: 'bot',
-          name: 'Trợ lý Action Digest',
-          avatar: 'fa-robot',
-          time: 'Bây giờ',
-          type: 'digest',
-          data: [
-            {
-              p: 'P2', pText: 'Quan trọng', color: 'amber', title: 'Nộp bài tập Lab 2 trên VLearn',
-              time: 'Cần xác nhận lại giờ cụ thể', source: 'TA - Quốc Bảo (16:45 Hôm nay)',
-              quote: 'Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn.',
-              statusText: '⚠️ Thời gian mập mờ · AI không tự bịa 23:59', warn: true
-            }
-          ]
-        });
-        return;
-      }
-
-      // 3. Schedule change
-      if (q.includes('đổi') || q.includes('dời') || q.includes('phòng') || q.includes('lịch')) {
-        messages.push({
-          sender: 'bot',
-          name: 'Trợ lý Action Digest',
-          avatar: 'fa-robot',
-          time: 'Bây giờ',
-          type: 'digest',
-          data: [
-            {
-              p: 'P1', pText: 'Khẩn cấp', color: 'rose', title: 'Dời Workshop chiều nay sang phòng E403',
-              time: '17:30 Hôm nay (16/9)', source: 'TA - Minh Hằng (15:30 Hôm nay)',
-              quote: '🔔 ĐÍNH CHÍNH LỊCH: Buổi Workshop chiều nay dời từ phòng E402 sang phòng E403 lúc 17:30 nhé mọi người!',
-              statusText: 'Đã xác thực từ TA · Chú ý đến phòng E403', warn: false
-            }
-          ]
-        });
-        return;
-      }
-
-      // 4. Default / Main: "tìm cho tôi những vấn đề quan trọng hôm nay"
-      messages.push({
-        sender: 'bot',
-        name: 'Trợ lý Action Digest',
-        avatar: 'fa-robot',
-        time: 'Bây giờ',
-        type: 'digest',
-        data: [
-          {
-            p: 'P1', pText: 'Khẩn cấp', color: 'rose', title: 'Dời Workshop chiều nay sang phòng E403',
-            time: '17:30 Hôm nay', source: 'TA - Minh Hằng (15:30)',
-            quote: '🔔 ĐÍNH CHÍNH LỊCH: Buổi Workshop chiều nay dời từ phòng E402 sang phòng E403 lúc 17:30 nhé mọi người!',
-            statusText: 'Đã xác thực từ thông báo TA', warn: false
-          },
-          {
-            p: 'P1', pText: 'Khẩn cấp', color: 'rose', title: 'Nộp Checkpoint 1 (Canvas 4 ô + Link Repo GitHub)',
-            time: '19:30 Hôm nay (16/9)', source: 'Giảng viên Lead Coach (14:15)',
-            quote: 'Hạn nộp Checkpoint 1 là 19:30 tối nay ngày 16/9. Đội trưởng nộp link repo GitHub công khai...',
-            statusText: 'Nguồn chính thức · Đếm ngược', warn: false
-          },
-          {
-            p: 'P2', pText: 'Quan trọng', color: 'amber', title: 'Nộp bài tập Lab 2 trên VLearn',
-            time: 'Cần xác nhận lại giờ', source: 'TA - Quốc Bảo (16:45)',
-            quote: 'Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn.',
-            statusText: 'Không tự ý bịa giờ cụ thể', warn: true
-          },
-          {
-            p: 'P2', pText: 'Quan trọng', color: 'slate', title: 'Chốt tài liệu spec.md tại Checkpoint 4',
-            time: '21:00 Ngày 17/9', source: 'BTC Hackathon (17:00)',
-            quote: 'Hạn chốt tài liệu AI Spec (spec.md) là 21:00 ngày 17/9 tại Checkpoint 4...',
-            statusText: 'Nguồn chính thức · Hạn chốt chất lượng', warn: false
-          }
-        ]
-      });
-    }
-
-    function clearChat() {
-      messages = [...initialThread];
-      renderThread();
-    }
-
-    // Modal Handlers
-    function toggleFlowModal(show) {
-      document.getElementById('flowModal').classList.toggle('hidden', !show);
-    }
-
-    function openCorrectionModal(taskName, deadline, priority) {
-      document.getElementById('editTaskName').value = taskName;
-      document.getElementById('editDeadline').value = deadline;
-      document.getElementById('editPriority').value = priority;
-      document.getElementById('correctionModal').classList.remove('hidden');
-    }
-
-    function closeCorrectionModal() {
-      document.getElementById('correctionModal').classList.add('hidden');
-    }
-
-    function handleCorrectionSubmit(e) {
+  input.addEventListener('keydown',(e)=>{
+    if(e.key==='Enter'){
       e.preventDefault();
-      alert('✅ Đã lưu sửa đổi! Dữ liệu đính chính được ghi nhận vào validation/corrections.log để cải tiến độ chuẩn xác của AI.');
-      closeCorrectionModal();
+      runFlow(false);
     }
+  });
 
-    // Init
-    renderThread();
-  </script>
+  send.addEventListener('click',()=>runFlow(false));
+
+  demoBtn.addEventListener('click',()=>{
+    input.value='/summary all';
+    slashHelp.classList.remove('show');
+    runFlow(true);
+  });
+
+  resetBtn.addEventListener('click',resetDemo);
+
+  document.querySelector('.slash-option').addEventListener('click',()=>{
+    input.value='/summary all';
+    slashHelp.classList.remove('show');
+    input.focus();
+  });
+
+  closeModal.addEventListener('click',()=>modal.classList.remove('show'));
+  modal.addEventListener('click',(e)=>{ if(e.target===modal) modal.classList.remove('show'); });
+})();
+</script>
 </body>
 </html>
