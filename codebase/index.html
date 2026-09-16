@@ -580,6 +580,84 @@
     color:#fff;
   }
 
+
+  .picker-panel{
+    margin-top:10px;
+    padding:10px;
+    border-radius:10px;
+    background:#2b2d31;
+    border:1px solid #3f4147;
+  }
+  .picker-title{
+    font-size:12px;
+    font-weight:800;
+    color:#dbdee1;
+    margin-bottom:8px;
+  }
+  .picker-sub{
+    font-size:11px;
+    color:#949ba4;
+    margin-bottom:10px;
+  }
+  .picker-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+  .picker-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 9px;
+    border-radius:8px;
+    background:#232428;
+    border:1px solid #3a3c42;
+    font-size:12px;
+    color:#dbdee1;
+  }
+  .picker-item input{
+    accent-color:#5865f2;
+  }
+  .picker-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:10px;
+  }
+  .ghost-btn{
+    border:1px solid #484b52;
+    background:#313338;
+    color:#dbdee1;
+    border-radius:8px;
+    padding:8px 10px;
+    font-weight:700;
+    font-size:12px;
+  }
+  .selected-channels{
+    margin-top:8px;
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .channel-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 8px;
+    border-radius:999px;
+    background:#232d5a;
+    border:1px solid #5865f2;
+    color:#dce1ff;
+    font-size:11px;
+    font-weight:700;
+  }
+  .slash-examples{
+    margin-top:8px;
+    font-size:11px;
+    color:#949ba4;
+    line-height:1.5;
+  }
+
   @media (max-width:1100px){
     .workspace{grid-template-columns:64px 220px minmax(0,1fr)}
     .inspector{grid-column:2 / 4; border-left:0; border-top:1px solid #1f2023}
@@ -680,9 +758,13 @@
             <div><strong>/summary all</strong><div style="font-size:12px;color:#949ba4;margin-top:2px">Quét tất cả channel được phép và tổng hợp việc quan trọng.</div></div>
             <span>AI Discord Assistant</span>
           </div>
+          <div class="slash-option" style="margin-top:8px">
+            <div><strong>/summary class-3a team-magician</strong><div style="font-size:12px;color:#949ba4;margin-top:2px">Chỉ tổng hợp các channel được chỉ định.</div></div>
+            <span>AI Discord Assistant</span>
+          </div>
         </div>
         <div class="composer">
-          <input id="commandInput" aria-label="Nhập lệnh Discord" placeholder="Nhắn tin #announcements — thử gõ /summary all" />
+          <input id="commandInput" aria-label="Nhập lệnh Discord" placeholder="Nhắn tin #announcements — thử gõ /summary all hoặc /summary class-3a team-magician" />
           <button id="sendBtn" type="button">Gửi</button>
         </div>
       </div>
@@ -713,10 +795,36 @@
         <div id="scanStatus" style="margin-top:8px;font-size:12px;color:#949ba4">Chưa bắt đầu</div>
       </div>
 
+
+      <div class="panel">
+        <div class="panel-title">Chọn channel muốn summary</div>
+        <div class="picker-panel">
+          <div class="picker-title">User có thể chọn channel ngay trước khi summary</div>
+          <div class="picker-sub">Tương ứng với slash command dạng <strong>/summary tên-kênh</strong> hoặc tick nhiều channel khả dụng.</div>
+          <div class="picker-grid">
+            <label class="picker-item"><input type="checkbox" class="pick-channel" value="announcements" checked> #announcements</label>
+            <label class="picker-item"><input type="checkbox" class="pick-channel" value="class-3a" checked> #class-3a</label>
+            <label class="picker-item"><input type="checkbox" class="pick-channel" value="lab-support"> #lab-support</label>
+            <label class="picker-item"><input type="checkbox" class="pick-channel" value="resources"> #resources</label>
+            <label class="picker-item"><input type="checkbox" class="pick-channel" value="team-magician" checked> #team-magician</label>
+            <label class="picker-item"><input type="checkbox" class="pick-channel" value="random"> #random</label>
+          </div>
+          <div class="picker-actions">
+            <button class="ghost-btn" id="fillSelectedCmd" type="button">Điền lệnh từ lựa chọn</button>
+            <button class="ghost-btn" id="selectAllChBtn" type="button">Chọn tất cả</button>
+            <button class="ghost-btn" id="clearAllChBtn" type="button">Bỏ chọn tất cả</button>
+          </div>
+          <div class="selected-channels" id="selectedChips"></div>
+          <div class="slash-examples">
+            Ví dụ: <strong>/summary all</strong> · <strong>/summary class-3a</strong> · <strong>/summary announcements team-magician</strong>
+          </div>
+        </div>
+      </div>
+
       <div class="panel">
         <div class="panel-title">Sơ đồ logic</div>
         <div class="mini-flow">
-          <div class="mini-node active" data-node="1">1. User gõ <strong>/summary all</strong></div>
+          <div class="mini-node active" data-node="1">1. User gõ <strong>/summary all</strong> hoặc <strong>/summary tên-kênh</strong></div>
           <div class="arrow">↓</div>
           <div class="mini-node" data-node="2">2. Bot quét các channel được cấp quyền</div>
           <div class="arrow">↓</div>
@@ -752,6 +860,11 @@
   const demoBtn = document.getElementById('demoBtn');
   const resetBtn = document.getElementById('resetBtn');
   const reminderBtn = document.getElementById('reminderBtn');
+  const fillSelectedCmd = document.getElementById('fillSelectedCmd');
+  const selectAllChBtn = document.getElementById('selectAllChBtn');
+  const clearAllChBtn = document.getElementById('clearAllChBtn');
+  const selectedChips = document.getElementById('selectedChips');
+  const pickChannels = [...document.querySelectorAll('.pick-channel')];
   const slashHelp = document.getElementById('slashHelp');
   const messages = document.getElementById('messages');
   const progressBar = document.getElementById('progressBar');
@@ -770,6 +883,31 @@
     const id = setTimeout(r, ms);
     timers.push(id);
   });
+
+
+  function getSelectedChannels(){
+    return pickChannels.filter(x => x.checked).map(x => x.value);
+  }
+
+  function renderSelectedChips(){
+    const selected = getSelectedChannels();
+    if(selected.length === 0){
+      selectedChips.innerHTML = '<span style="font-size:12px;color:#949ba4">Chưa chọn channel nào.</span>';
+      return;
+    }
+    selectedChips.innerHTML = selected.map(ch => `<span class="channel-chip">#${ch}</span>`).join('');
+  }
+
+  function fillCommandFromSelection(){
+    const selected = getSelectedChannels();
+    if(selected.length === 0){
+      input.value = '/summary all';
+    }else{
+      input.value = '/summary ' + selected.join(' ');
+    }
+    slashHelp.classList.remove('show');
+    input.focus();
+  }
 
   function setStep(n){
     steps.forEach((el,i)=>{
@@ -830,6 +968,18 @@
       return;
     }
 
+    let selectedFromCommand = [];
+    const rawArgs = command.replace('/summary','').trim();
+    if(rawArgs && rawArgs.toLowerCase() !== 'all'){
+      selectedFromCommand = rawArgs.split(/\s+/).filter(Boolean);
+    }
+    const selectedChannels = selectedFromCommand.length ? selectedFromCommand : getSelectedChannels();
+    const channelLabel = selectedFromCommand.length
+      ? selectedChannels.map(x => '#' + x).join(', ')
+      : (rawArgs.toLowerCase() === 'all' || selectedChannels.length === 0
+          ? 'tất cả channel được cấp quyền'
+          : selectedChannels.map(x => '#' + x).join(', '));
+
     running = true;
     send.disabled = true;
     demoBtn.disabled = true;
@@ -846,27 +996,37 @@
     setStep(2);
     const botThinking = addMessage({
       avatar:'AI', color:'#5865f2', author:'AI Discord Assistant', bot:true,
-      html:`Đang quét <strong>tất cả channel được cấp quyền</strong> để tìm task, deadline và thay đổi lịch...`
+      html:`Đang quét <strong>${channelLabel}</strong> để tìm task, deadline và thay đổi lịch...`
     });
     markGenerated(botThinking);
 
+    const allMode = rawArgs.toLowerCase() === 'all' || selectedChannels.length === 0;
+    const channelsToScan = allMode
+      ? scanItems
+      : scanItems.filter(item => selectedChannels.includes(item.dataset.scan));
+
     for(let i=0;i<scanItems.length;i++){
       const dot=scanItems[i].querySelector('.status-dot');
+      dot.classList.remove('active','done');
+    }
+
+    for(let i=0;i<channelsToScan.length;i++){
+      const dot=channelsToScan[i].querySelector('.status-dot');
       dot.classList.add('active');
-      scanStatus.textContent = `Đang quét ${scanItems[i].querySelector('span:nth-child(2)').textContent}...`;
-      progressBar.style.width = `${Math.round((i/scanItems.length)*100)}%`;
+      scanStatus.textContent = `Đang quét ${channelsToScan[i].querySelector('span:nth-child(2)').textContent}...`;
+      progressBar.style.width = `${Math.round((i/channelsToScan.length)*100)}%`;
       await sleep(430);
       dot.classList.remove('active');
       dot.classList.add('done');
     }
     progressBar.style.width='100%';
-    scanStatus.textContent='Đã quét 6 channel · 110 message';
+    scanStatus.textContent=`Đã quét ${channelsToScan.length} channel · ${allMode ? '110' : Math.max(18, channelsToScan.length*18)} message`;
 
     await sleep(500);
     setStep(3);
     const analysisMsg = addMessage({
       avatar:'AI', color:'#5865f2', author:'AI Discord Assistant', bot:true,
-      html:`Đã thu thập message. Đang phân loại <strong>actionable / informational / noise</strong> và trích xuất dữ kiện...`
+      html:`Đã thu thập message từ <strong>${channelLabel}</strong>. Đang phân loại <strong>actionable / informational / noise</strong> và trích xuất dữ kiện...`
     });
     markGenerated(analysisMsg);
 
@@ -883,8 +1043,8 @@
 
     const resultHTML = `
       <div class="embed">
-        <h3>📌 Summary từ tất cả channel</h3>
-        <div style="font-size:12px;color:#949ba4">Đã quét 6 channel · 110 message · 4 mục quan trọng</div>
+        <h3>📌 Summary từ ${rawArgs.toLowerCase() === "all" || selectedChannels.length === 0 ? "tất cả channel" : channelLabel}</h3>
+        <div style="font-size:12px;color:#949ba4">Đã quét ${channelsToScan.length} channel · ${allMode ? "110" : Math.max(18, channelsToScan.length*18)} message · 4 mục quan trọng</div>
         <div class="summary-grid">
           <div class="summary-card">
             <div class="label">🔴 High · Task</div>
@@ -931,7 +1091,7 @@
           </div>
         </div>
         <div style="margin-top:10px;font-size:12px;color:#b5bac1">
-          💡 AI chỉ hỗ trợ lọc và ưu tiên. User vẫn có thể mở message nguồn để xác nhận.
+          💡 AI chỉ tổng hợp trong các channel được chọn. User vẫn có thể mở message nguồn để xác nhận.
         </div>
       </div>`;
     const resultMsg = addMessage({
@@ -990,6 +1150,19 @@
     running = false;
   }
 
+
+  pickChannels.forEach(ch => ch.addEventListener('change', renderSelectedChips));
+  fillSelectedCmd.addEventListener('click', fillCommandFromSelection);
+  selectAllChBtn.addEventListener('click', () => {
+    pickChannels.forEach(ch => ch.checked = true);
+    renderSelectedChips();
+  });
+  clearAllChBtn.addEventListener('click', () => {
+    pickChannels.forEach(ch => ch.checked = false);
+    renderSelectedChips();
+  });
+  renderSelectedChips();
+
   input.addEventListener('input',()=>{
     slashHelp.classList.toggle('show', input.value.trim().startsWith('/'));
   });
@@ -1012,10 +1185,16 @@
   resetBtn.addEventListener('click',resetDemo);
   reminderBtn.addEventListener('click', simulateReminder);
 
-  document.querySelector('.slash-option').addEventListener('click',()=>{
-    input.value='/summary all';
-    slashHelp.classList.remove('show');
-    input.focus();
+  document.querySelectorAll('.slash-option').forEach((opt, idx)=>{
+    opt.addEventListener('click',()=>{
+      if(idx === 0){
+        input.value='/summary all';
+      }else{
+        input.value='/summary class-3a team-magician';
+      }
+      slashHelp.classList.remove('show');
+      input.focus();
+    });
   });
 
   closeModal.addEventListener('click',()=>modal.classList.remove('show'));
