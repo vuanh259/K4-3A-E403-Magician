@@ -75,7 +75,7 @@
   .flow-steps{
     margin-top:12px;
     display:grid;
-    grid-template-columns:repeat(5, minmax(0,1fr));
+    grid-template-columns:repeat(6, minmax(0,1fr));
     gap:8px;
   }
   .step{
@@ -518,6 +518,68 @@
     border:0;background:var(--brand);color:#fff;border-radius:7px;padding:8px 12px;font-weight:800;
   }
 
+
+  .reminder-box{
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:8px;
+    background:#2f3138;
+    border:1px solid #4a4d55;
+    font-size:12px;
+    color:#dbdee1;
+  }
+  .reminder-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .reminder-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 8px;
+    border-radius:999px;
+    background:#1f3328;
+    border:1px solid #2f6e4d;
+    color:#86efac;
+    font-weight:800;
+    font-size:11px;
+  }
+  .simulate-btn{
+    border:0;
+    background:#5865f2;
+    color:#fff;
+    border-radius:6px;
+    padding:7px 10px;
+    font-weight:800;
+    font-size:12px;
+  }
+  .dm-banner{
+    margin:10px 0 14px;
+    padding:10px 12px;
+    background:#24262b;
+    border:1px solid #3f4147;
+    border-radius:8px;
+    color:#b5bac1;
+    font-size:12px;
+  }
+  .dm-alert{
+    border-left:4px solid #f0b232;
+    background:#2b2d31;
+    border-radius:5px;
+    padding:12px 14px;
+    margin-top:7px;
+    max-width:760px;
+  }
+  .dm-alert .deadline{
+    margin-top:6px;
+    font-size:14px;
+    font-weight:800;
+    color:#fff;
+  }
+
   @media (max-width:1100px){
     .workspace{grid-template-columns:64px 220px minmax(0,1fr)}
     .inspector{grid-column:2 / 4; border-left:0; border-top:1px solid #1f2023}
@@ -547,6 +609,7 @@
       <div class="step" data-step="3"><div class="n">3</div><strong>AI phân tích</strong><span>Task · deadline · lịch</span></div>
       <div class="step" data-step="4"><div class="n">4</div><strong>Kiểm tra độ chắc chắn</strong><span>Confidence + grounding</span></div>
       <div class="step" data-step="5"><div class="n">5</div><strong>Trả kết quả trong chat</strong><span>Ưu tiên + nguồn gốc</span></div>
+      <div class="step" data-step="6"><div class="n">6</div><strong>DM nhắc gần deadline</strong><span>Nhắc riêng người dùng</span></div>
     </div>
   </header>
 
@@ -631,7 +694,8 @@
       <div class="panel">
         <div class="panel-title">Demo nhanh</div>
         <div class="legend">Bấm nút dưới để người xem thấy toàn bộ hành trình từ slash command → quét channel → AI phân tích → kết quả trả lại ngay trong chat.</div>
-        <button class="demo-btn" id="demoBtn" type="button">▶ Chạy demo từ đầu đến cuối</button>
+        <button class="demo-btn" id="demoBtn" type="button">▶ Chạy demo từ đầu đến summary</button>
+        <button class="demo-btn" id="reminderBtn" type="button" style="background:#3b3d44;margin-top:8px" disabled>⏰ Giả lập còn 30 phút tới deadline</button>
         <button class="reset-btn" id="resetBtn" type="button">↺ Reset demo</button>
       </div>
 
@@ -661,6 +725,8 @@
           <div class="mini-node" data-node="4">4. Kiểm tra confidence + grounding</div>
           <div class="arrow">↓</div>
           <div class="mini-node" data-node="5">5. Bot trả summary vào chính đoạn chat</div>
+          <div class="arrow">↓</div>
+          <div class="mini-node" data-node="6">6. Gần deadline → bot DM nhắc riêng user</div>
         </div>
       </div>
 
@@ -685,6 +751,7 @@
   const send = document.getElementById('sendBtn');
   const demoBtn = document.getElementById('demoBtn');
   const resetBtn = document.getElementById('resetBtn');
+  const reminderBtn = document.getElementById('reminderBtn');
   const slashHelp = document.getElementById('slashHelp');
   const messages = document.getElementById('messages');
   const progressBar = document.getElementById('progressBar');
@@ -739,6 +806,7 @@
     running = false;
     send.disabled = false;
     demoBtn.disabled = false;
+    reminderBtn.disabled = true;
     input.disabled = false;
     input.value = '';
     slashHelp.classList.remove('show');
@@ -854,6 +922,14 @@
             </div>
           </div>
         </div>
+        <div class="reminder-box">
+          <div class="reminder-row">
+            <div>
+              <span class="reminder-pill">⏰ Reminder đã bật</span>
+              <div style="margin-top:6px;color:#b5bac1">Các task có deadline sẽ được DM nhắc trước <strong>30 phút</strong>.</div>
+            </div>
+          </div>
+        </div>
         <div style="margin-top:10px;font-size:12px;color:#b5bac1">
           💡 AI chỉ hỗ trợ lọc và ưu tiên. User vẫn có thể mở message nguồn để xác nhận.
         </div>
@@ -875,7 +951,43 @@
     input.value='';
     send.disabled=false;
     demoBtn.disabled=false;
+    reminderBtn.disabled=false;
     running=false;
+  }
+
+
+  async function simulateReminder(){
+    if(running || reminderBtn.disabled) return;
+    running = true;
+    reminderBtn.disabled = true;
+    setStep(6);
+
+    const divider = addMessage({
+      avatar:'AI', color:'#f0b232', author:'AI Discord Assistant', bot:true,
+      html:`<div class="dm-banner">🔔 Hệ thống phát hiện deadline “Lab 5” chỉ còn <strong>30 phút</strong>. Đang gửi DM riêng cho Viet Anh...</div>`
+    });
+    markGenerated(divider);
+
+    await sleep(700);
+
+    const dmMsg = addMessage({
+      avatar:'AI', color:'#5865f2', author:'AI Discord Assistant · Direct Message', bot:true,
+      html:`
+        <div class="dm-alert">
+          <div style="font-size:12px;color:#f0b232;font-weight:800">⏰ DEADLINE REMINDER</div>
+          <div class="deadline">Lab 5 còn 30 phút nữa sẽ hết hạn</div>
+          <div style="margin-top:6px">Deadline: <strong>21:00 hôm nay</strong></div>
+          <div style="margin-top:4px;color:#b5bac1">Nguồn: #announcements · Lab Coach</div>
+          <div style="margin-top:9px;font-size:12px;color:#949ba4">
+            Bot chỉ gửi nhắc nhở dựa trên deadline đã trích xuất từ message nguồn.
+          </div>
+        </div>`
+    });
+    markGenerated(dmMsg);
+
+    messages.scrollTop = messages.scrollHeight;
+    scanStatus.textContent = 'Reminder đã gửi DM cho user · còn 30 phút tới deadline';
+    running = false;
   }
 
   input.addEventListener('input',()=>{
@@ -898,6 +1010,7 @@
   });
 
   resetBtn.addEventListener('click',resetDemo);
+  reminderBtn.addEventListener('click', simulateReminder);
 
   document.querySelector('.slash-option').addEventListener('click',()=>{
     input.value='/summary all';
