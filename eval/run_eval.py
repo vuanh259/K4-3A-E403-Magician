@@ -21,7 +21,7 @@ def div(a,b): return a/b if b else 0.0
 def pct(x): return f"{x*100:.1f}%"
 
 async def main():
-    cases = json.loads((Path(__file__).parent / "golden_set.json").read_text(encoding="utf-8"))
+    cases = json.loads((Path(__file__).parent / "golden_set.json").read_text(encoding="utf-8-sig"))
     now = datetime.now(ZoneInfo(settings.timezone))
 
     PRIORITY_MAP = {
