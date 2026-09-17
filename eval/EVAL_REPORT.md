@@ -1,7 +1,7 @@
 # BÁO CÁO KẾT QUẢ KIỂM THỬ ĐỊNH LƯỢNG (EVAL REPORT) — CP3 & CP4
 **Dự án:** Discord Action Digest · **Nhóm:** Magician · **Lớp:** 3A · **Phòng:** E403
 **Mô hình đánh giá thực tế:** `openai/gpt-4o-mini` (Lệnh gọi LLM trực tiếp, 100% Zero Hardcode)
-**Thời điểm chạy:** 2026-09-17 15:04:10
+**Thời điểm chạy:** 2026-09-17 15:06:41
 **Bộ kiểm thử:** Golden Set gồm **22 trường hợp** (trong đó **13 trường hợp trích từ data thật** `discord-pack/`).
 
 ## 1. Bảng Tổng Hợp Thước Đo Định Lượng
