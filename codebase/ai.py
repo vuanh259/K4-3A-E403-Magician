@@ -83,6 +83,7 @@ async def analyze_messages(messages: list[dict], current_time_iso: str, timezone
     resp = await client.chat.completions.create(
         model=settings.ai_model,
         temperature=0,
+        max_tokens=2500,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
