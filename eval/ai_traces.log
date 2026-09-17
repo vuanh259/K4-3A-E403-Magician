@@ -2578,3 +2578,59 @@ RAW LLM RESPONSE:
 ```
 ============================================================
 
+=== [AI TRACE - 2026-09-17T15:59:35.155044] ===
+MODEL: google/gemini-2.5-flash
+INPUT PAYLOAD:
+{
+  "current_time": "2026-09-17T15:59:31.555233+07:00",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "messages": [
+    {
+      "message_id": "1549976345360994355",
+      "channel_id": "1549976329485688872",
+      "channel_name": "class-3b",
+      "author": "Lab coach",
+      "created_at": "2026-09-17T02:52:37.902000+00:00",
+      "content": "Ngân hàng đề tài chính thức sẽ được công khai lúc 22h00 ngày 13/09/2026.\n\nHạn cuối lựa chọn và đăng ký đề tài - hoàn thiện các deliverables Gate 1 là 23:59 ngày 20/09/2026.",
+      "jump_url": "https://discord.com/channels/1549824842981974110/1549976329485688872/1549976345360994355"
+    },
+    {
+      "message_id": "1549976994589188099",
+      "channel_id": "1549976329485688872",
+      "channel_name": "class-3b",
+      "author": "Lab coach",
+      "created_at": "2026-09-17T02:55:12.690000+00:00",
+      "content": "Hoàn thành xác minh danh tính, kết nối Discord và hoàn tất hồ sơ năng lực.\n\nThời hạn hoàn thành đến 21:00 14/09/2026.",
+      "jump_url": "https://discord.com/channels/1549824842981974110/1549976329485688872/1549976994589188099"
+    }
+  ]
+}
+RAW LLM RESPONSE:
+```json
+{
+  "items": [
+    {
+      "source_message_id": "1549976345360994355",
+      "type": "deadline",
+      "title": "Hạn cuối lựa chọn và đăng ký đề tài - hoàn thiện các deliverables Gate 1",
+      "action_required": true,
+      "deadline_iso": "2026-09-20T23:59:00+07:00",
+      "priority": "high",
+      "confidence": 0.95,
+      "reason": "Thông báo chính thức về hạn chót lựa chọn đề tài và hoàn thiện deliverables Gate 1."
+    },
+    {
+      "source_message_id": "1549976994589188099",
+      "type": "deadline",
+      "title": "Hoàn thành xác minh danh tính, kết nối Discord và hoàn tất hồ sơ năng lực",
+      "action_required": true,
+      "deadline_iso": "2026-09-14T21:00:00+07:00",
+      "priority": "high",
+      "confidence": 0.95,
+      "reason": "Thông báo chính thức về hạn chót hoàn thành xác minh danh tính, kết nối Discord và hồ sơ năng lực."
+    }
+  ]
+}
+```
+============================================================
+
