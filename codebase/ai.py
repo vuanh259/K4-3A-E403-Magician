@@ -14,26 +14,41 @@ Chỉ tạo item nếu message chứa một trong các nhóm:
 - assignment: bài/lab/form/việc cần hoàn thành
 - deadline: hạn nộp/hạn hoàn thành
 - meeting: lịch họp/workshop/buổi học có thời điểm rõ
-- schedule_change: đổi lịch, đổi phòng, hủy/dời buổi
+- schedule_change: đổi lịch, đổi phòng, dời buổi (kể cả phương án dự phòng có điều kiện), thông báo HỦY hoặc ĐÓNG bài tập/form/buổi học
 
-Bỏ qua:
-- trò chuyện xã giao
-- joke
-- cảm ơn
-- trao đổi kỹ thuật không tạo hành động mới
-- tin thiếu căn cứ đến mức không xác định được hành động
+Bỏ qua (QUAN TRỌNG):
+- CÂU HỎI THẮC MẮC của học viên hỏi về deadline/giờ giấc (ví dụ: "Ủa hạn là mấy giờ?", "Có phải tối nay không?"). Tuyệt đối KHÔNG biến câu hỏi thành task hay deadline. Chỉ trích xuất khi là THÔNG BÁO/HƯỚNG DẪN khẳng định.
+- Việc ĐÃ HOÀN THÀNH trong quá khứ của cá nhân (ví dụ: "đã nộp xong lúc 9:00 sáng nay").
+- Lời than thở, việc riêng cá nhân (ví dụ: "chắc 3h sáng mới xong prototype").
+- Trò chuyện xã giao, joke, cảm ơn, rủ rê đi chơi/ăn uống.
+- Trao đổi kỹ thuật không tạo hành động mới.
+- Tin thiếu căn cứ đến mức không xác định được hành động.
+
+Quy tắc đối với thông báo HỦY / ĐÃ ĐÓNG:
+- VẪN TRÍCH XUẤT (gán type: schedule_change, action_required: true) để học viên kịp nắm thông tin (không mất công làm bài hoặc gửi form nữa).
+- Tuyệt đối KHÔNG gán deadline_iso (đặt deadline_iso: null) để hệ thống không gửi reminder nhắc việc khi đến giờ.
+- reason: giải thích rõ là đã hủy/đóng để không cần nộp hay chuẩn bị nữa.
+
+Quy tắc đối với câu điều kiện / kế hoạch dự phòng:
+- VẪN GIỮ và TRÍCH XUẤT các phương án dự phòng/có điều kiện (ví dụ: "Nếu chiều nay mưa thì buổi họp 15:00 dời sang online").
+- Đặt action_required: true, giải thích rõ điều kiện phụ thuộc trong reason (ví dụ: "Dời sang online nếu trời mưa, cần theo dõi cập nhật").
 
 Quy tắc an toàn:
 - KHÔNG bịa deadline.
 - KHÔNG bịa người gửi, channel, nguồn.
-- Nếu không chắc, confidence thấp.
 - source_message_id phải đúng với một message đầu vào.
-- deadline_iso chỉ điền nếu đủ căn cứ; nếu không thì null.
+- deadline_iso chỉ điền nếu đủ căn cứ mốc thời gian rõ ràng; nếu không có giờ cụ thể thì đặt null.
 - reason giải thích ngắn vì sao item quan trọng.
+
+Quy tắc chấm confidence (0.0 đến 1.0):
+- 0.95 - 1.0: Thông báo chính thức, có hạn nộp/thời điểm đầy đủ rõ ràng (ngày + giờ cụ thể).
+- 0.80 - 0.90: Kế hoạch dự phòng có điều kiện ("nếu... thì..."), hoặc thông báo hủy/đóng task/buổi học.
+- 0.65 - 0.75: Có việc/deadline nhưng mốc thời gian mơ hồ, chưa rõ giờ cụ thể (ví dụ: "tối nay", "ngày mai", "tuần này" mà không nêu rõ giờ).
+- Dưới 0.5: Tin đồn, câu hỏi của học viên (BỎ QUA, không trích xuất).
 
 Priority:
 - high: deadline gần / việc bắt buộc / thay đổi cần biết ngay.
-- medium: cần hành động nhưng chưa gấp.
+- medium: cần hành động nhưng chưa gấp / phương án có điều kiện.
 - low: đáng chú ý nhưng ít cấp bách.
 
 Chỉ trả JSON hợp lệ:
@@ -107,6 +122,27 @@ async def analyze_messages(messages: list[dict], current_time_iso: str, timezone
         item["source_message"] = src["content"]
         item["source_url"] = src.get("jump_url")
         item["source_message_id"] = sid
+
+        # Heuristic calibration for confidence score
+        try:
+            raw_conf = float(item.get("confidence") if item.get("confidence") is not None else 1.0)
+        except (ValueError, TypeError):
+            raw_conf = 1.0
+
+        content_lower = str(src.get("content", "")).lower()
+        ambiguous_time_markers = ["chưa rõ", "tối nay", "chiều nay", "sáng nay", "ngày mai", "mai ", "tuần này"]
+        has_ambiguous_time = any(kw in content_lower for kw in ambiguous_time_markers)
+        has_specific_time = bool(re.search(r"\b\d{1,2}(?::\d{2}|h\d{0,2}|\s*giờ)\b", content_lower))
+
+        if has_ambiguous_time and not has_specific_time:
+            # Ambiguous deadline without specific hour (e.g. 'tối nay', 'ngày mai')
+            # Spec Đường 2: không bịa giờ, hạ confidence xuống 0.70 để hiển thị nhãn cảnh báo
+            item["deadline_iso"] = None
+            raw_conf = min(raw_conf, 0.70)
+        elif any(k in content_lower for k in ["nếu", "dự phòng"]):
+            raw_conf = min(raw_conf, 0.85)
+
+        item["confidence"] = round(max(0.0, min(1.0, raw_conf)), 2)
         safe_items.append(item)
 
     data["items"] = safe_items

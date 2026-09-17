@@ -1,17 +1,17 @@
 {
   "metrics": {
     "sample_count": 20,
-    "tp": 13,
-    "fp": 1,
-    "fn": 0,
-    "tn": 6,
-    "accuracy": 0.95,
-    "precision": 0.9285714285714286,
-    "recall": 1.0,
-    "f1": 0.962962962962963,
+    "tp": 8,
+    "fp": 0,
+    "fn": 5,
+    "tn": 7,
+    "accuracy": 0.75,
+    "precision": 1.0,
+    "recall": 0.6153846153846154,
+    "f1": 0.761904761904762,
     "type_accuracy": 0.0,
-    "priority_accuracy": 0.5,
-    "deadline_presence_accuracy": 0.6153846153846154,
+    "priority_accuracy": 0.25,
+    "deadline_presence_accuracy": 0.75,
     "grounding_rate": 1.0,
     "hallucinated_source_rate": 0.0
   },
@@ -20,13 +20,13 @@
       "id": "CASE_01",
       "message": "Các nhóm chú ý: Hạn nộp Checkpoint 1 là 19:30 tối nay ngày 16/9. Đội trưởng nộp link repo GitHub và Canvas 4 ô qua form nhé.",
       "gold_actionable": true,
-      "pred_actionable": true,
+      "pred_actionable": false,
       "gold_type": null,
-      "pred_type": "deadline",
+      "pred_type": null,
       "gold_priority": "high",
-      "pred_priority": "high",
+      "pred_priority": null,
       "gold_has_deadline": true,
-      "pred_has_deadline": true
+      "pred_has_deadline": false
     },
     {
       "id": "CASE_02",
@@ -86,7 +86,7 @@
       "gold_priority": "medium",
       "pred_priority": "high",
       "gold_has_deadline": false,
-      "pred_has_deadline": true
+      "pred_has_deadline": false
     },
     {
       "id": "CASE_07",
@@ -104,11 +104,11 @@
       "id": "CASE_08",
       "message": "Mọi người nhớ nộp báo cáo tiến độ tuần này nhé.",
       "gold_actionable": true,
-      "pred_actionable": true,
+      "pred_actionable": false,
       "gold_type": null,
-      "pred_type": "assignment",
+      "pred_type": null,
       "gold_priority": "low",
-      "pred_priority": "medium",
+      "pred_priority": null,
       "gold_has_deadline": false,
       "pred_has_deadline": false
     },
@@ -116,13 +116,13 @@
       "id": "CASE_09",
       "message": "Mai nộp spec nha cả lớp.",
       "gold_actionable": true,
-      "pred_actionable": true,
+      "pred_actionable": false,
       "gold_type": null,
-      "pred_type": "assignment",
+      "pred_type": null,
       "gold_priority": "medium",
-      "pred_priority": "medium",
+      "pred_priority": null,
       "gold_has_deadline": false,
-      "pred_has_deadline": true
+      "pred_has_deadline": false
     },
     {
       "id": "CASE_10",
@@ -156,7 +156,7 @@
       "gold_type": null,
       "pred_type": "schedule_change",
       "gold_priority": "high",
-      "pred_priority": "high",
+      "pred_priority": "medium",
       "gold_has_deadline": true,
       "pred_has_deadline": false
     },
@@ -168,9 +168,9 @@
       "gold_type": null,
       "pred_type": "schedule_change",
       "gold_priority": "high",
-      "pred_priority": "high",
+      "pred_priority": "medium",
       "gold_has_deadline": true,
-      "pred_has_deadline": true
+      "pred_has_deadline": false
     },
     {
       "id": "CASE_14",
@@ -188,13 +188,13 @@
       "id": "CASE_15",
       "message": "Mọi người lưu ý 2 mốc quan trọng: CP1 nộp lúc 19:30 tối nay 16/9, còn CP2 nộp lúc 21:00 cùng ngày.",
       "gold_actionable": true,
-      "pred_actionable": true,
+      "pred_actionable": false,
       "gold_type": null,
-      "pred_type": "deadline",
+      "pred_type": null,
       "gold_priority": null,
-      "pred_priority": "high",
+      "pred_priority": null,
       "gold_has_deadline": false,
-      "pred_has_deadline": true
+      "pred_has_deadline": false
     },
     {
       "id": "CASE_16",
@@ -212,23 +212,23 @@
       "id": "CASE_17",
       "message": "Trước buổi học ngày mai, các bạn đọc tài liệu PAIR Guidebook và HAX Toolkit trong thư mục further-reading nhé.",
       "gold_actionable": false,
-      "pred_actionable": true,
+      "pred_actionable": false,
       "gold_type": null,
-      "pred_type": "assignment",
+      "pred_type": null,
       "gold_priority": null,
-      "pred_priority": "medium",
+      "pred_priority": null,
       "gold_has_deadline": false,
-      "pred_has_deadline": true
+      "pred_has_deadline": false
     },
     {
       "id": "CASE_18",
       "message": "Mỗi thành viên nhớ tạo 1 file cá nhân trong thư mục reflection/ trước khi kết thúc CP6.",
       "gold_actionable": true,
-      "pred_actionable": true,
+      "pred_actionable": false,
       "gold_type": null,
-      "pred_type": "assignment",
+      "pred_type": null,
       "gold_priority": "low",
-      "pred_priority": "medium",
+      "pred_priority": null,
       "gold_has_deadline": true,
       "pred_has_deadline": false
     },
@@ -250,7 +250,7 @@
       "gold_actionable": true,
       "pred_actionable": true,
       "gold_type": null,
-      "pred_type": "deadline",
+      "pred_type": "assignment",
       "gold_priority": "high",
       "pred_priority": "high",
       "gold_has_deadline": true,

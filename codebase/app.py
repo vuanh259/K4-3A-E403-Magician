@@ -226,19 +226,14 @@ async def run_summary(
         timezone_name=settings.timezone,
     )
 
+    # Kiểm tra xem user đã từng chạy summary trước đó chưa
+    last_run = await store.get_last_summary_run(interaction.user.id)
+    has_previous_run = last_run is not None
+
     items = [
         x
         for x in result.get("items", [])
-        if (
-            x.get("action_required") is True
-            or x.get("type")
-            in {
-                "assignment",
-                "deadline",
-                "meeting",
-                "schedule_change",
-            }
-        )
+        if x.get("action_required") is True
     ]
 
     print(f"[AI] Phân tích hoàn tất! Trích xuất được {len(items)} việc quan trọng:")
@@ -248,7 +243,7 @@ async def run_summary(
         ch = it.get("source_channel") or "unknown"
         print(f"   {i}. [{prio}] {it.get('title')} | Hạn: {dl} | Nguồn: #{ch}")
 
-    task_ids = await store.upsert_items(
+    task_ids, is_new_flags = await store.upsert_items(
         user_id=interaction.user.id,
         guild_id=(
             interaction.guild.id
@@ -271,10 +266,12 @@ async def run_summary(
     )
 
     embed = build_summary_embed(
-        items,
-        task_ids,
-        names,
-        len(messages),
+        items=items,
+        task_ids=task_ids,
+        channel_names=names,
+        scanned_count=len(messages),
+        is_new_flags=is_new_flags,
+        has_previous_run=has_previous_run,
     )
 
     await interaction.channel.send(
@@ -288,9 +285,11 @@ async def run_summary(
     channel_title = getattr(interaction.channel, "name", "channel")
     print(f"[DISCORD] Đã gửi bản tin Embed tới #{channel_title} cho {interaction.user.name} thành công!")
 
+    new_count = sum(1 for f in is_new_flags if f)
+    new_info = f" ({new_count} tin mới)" if has_previous_run else ""
     await interaction.followup.send(
         f"✅ Xong. Đã phân tích **{len(messages)} message** "
-        f"trong 24 giờ gần nhất và lưu **{len(items)} item** "
+        f"trong 24 giờ gần nhất{new_info} và lưu **{len(items)} item** "
         "để theo dõi / DM reminder.",
         ephemeral=True,
     )

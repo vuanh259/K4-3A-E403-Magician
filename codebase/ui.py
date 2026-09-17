@@ -6,13 +6,31 @@ PRIORITY_ICON = {
     "low": "🟢",
 }
 
-def build_summary_embed(items: list[dict], task_ids: list[int], channel_names: list[str], scanned_count: int) -> discord.Embed:
+def build_summary_embed(
+    items: list[dict],
+    task_ids: list[int],
+    channel_names: list[str],
+    scanned_count: int,
+    is_new_flags: list[bool] | None = None,
+    has_previous_run: bool = False,
+) -> discord.Embed:
+    is_new_flags = is_new_flags or [False] * len(items)
+    new_count = sum(1 for f in is_new_flags if f)
+
+    desc_lines = [
+        f"Đã quét **{len(channel_names)} channel** · **{scanned_count} message**",
+        "Phạm vi: " + ", ".join(f"`#{x}`" for x in channel_names),
+    ]
+
+    if has_previous_run:
+        if new_count > 0:
+            desc_lines.append(f"✨ **Phát hiện {new_count} thông báo MỚI** kể từ lần quét trước!")
+        else:
+            desc_lines.append("📋 **Toàn bộ thông báo trong 24h qua** *(không có tin mới thêm)*")
+
     embed = discord.Embed(
         title="📌 AI Discord Summary",
-        description=(
-            f"Đã quét **{len(channel_names)} channel** · **{scanned_count} message**\n"
-            + "Phạm vi: " + ", ".join(f"`#{x}`" for x in channel_names)
-        ),
+        description="\n".join(desc_lines),
         color=discord.Color.blurple(),
         timestamp=discord.utils.utcnow(),
     )
@@ -31,6 +49,9 @@ def build_summary_embed(items: list[dict], task_ids: list[int], channel_names: l
         icon = PRIORITY_ICON.get(priority, "🟡")
         item_type = str(item.get("type", "info")).upper()
         title = str(item.get("title", "Thông tin cần chú ý"))[:180]
+
+        is_item_new = is_new_flags[idx] if idx < len(is_new_flags) else False
+        new_tag = "🆕 " if (has_previous_run and is_item_new) else ""
 
         parts = []
         if task_id:
@@ -55,12 +76,15 @@ def build_summary_embed(items: list[dict], task_ids: list[int], channel_names: l
 
         try:
             conf = float(item.get("confidence", 0))
-            parts.append(f"Confidence: `{conf:.2f}`")
+            if conf < 0.8:
+                parts.append(f"Confidence: `{conf:.2f}` ⚠️ *(Mốc giờ/thông tin cần xác nhận lại)*")
+            else:
+                parts.append(f"Confidence: `{conf:.2f}`")
         except Exception:
             pass
 
         embed.add_field(
-            name=f"{icon} {item_type} · {title}",
+            name=f"{icon} {new_tag}{item_type} · {title}",
             value="\n".join(parts)[:1024],
             inline=False,
         )

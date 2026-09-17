@@ -2,3 +2,4 @@ discord.py>=2.6,<3
 openai>=1.40
 python-dotenv>=1.0
 aiosqlite>=0.20
+tzdata
