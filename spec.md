@@ -282,12 +282,11 @@ Theo nguyên tắc minh bạch khoa học của sự kiện (*"Số xấu vẫn 
   - *Chi phí sai sót (Cost of error):* Nếu bot tự động DM liên tục (Phương án 1), khi gặp false positive sẽ làm phiền và gây ức chế, dẫn đến việc học viên block bot (thất bại hoàn toàn). Phương án 2 tôn trọng quyền kiểm soát của người dùng (HAX G17 / PAIR Control), đảm bảo bot là người hỗ trợ tin cậy và không bao giờ spam.
 
 ## §9. Changelog
-## §9. Changelog
 
 | Thời điểm | Đổi gì | Vì sao |
 |---|---|---|
-| 17/9 - CP5 | Kiểm thử sản phẩm với **5 người dùng ngoài nhóm**: Lê Nguyễn Thái Dương, Nguyễn Xuân Khuê, Nguyễn Minh Lương, Nguyễn Duy Phong, Nguyễn Quốc Việt | Kiểm chứng khả năng sử dụng `/summary`, reminder, `/correct`, `/done`, Confidence và khả năng giảm việc người dùng phải đọc lại toàn bộ Discord. |
-| 18/9 - CP5 | **Cải thiện chức năng `/correct`**: hiển thị Task ID ngay trong reminder; cho phép sửa deadline trực tiếp; sau khi sửa, hệ thống cập nhật SQLite và tính lại reminder | Kịch bản test cho thấy AI có thể nhận nhầm lịch họp **22:00 thành 14:00**. Đến **13:30**, user nhận reminder sai mới phát hiện vấn đề và dùng `/correct` sửa lại thành 22:00. Cách này giúp user sửa lỗi ngay khi gặp mà không cần quay lại đọc toàn bộ Discord. |
-| 18/9 - CP5 | Làm rõ vai trò của `/summary`, `/tasks`, `/done` và link `Nguồn` | `/summary` dùng để xem thông tin quan trọng trong 24 giờ, `/tasks` để xem việc chưa hoàn thành, `/done` để đóng task; link `Nguồn` chỉ dùng khi cần kiểm chứng chứ không bắt buộc mở cho mọi item. |
+
+| 18/9 - CP5 | Xóa chức năng `/correct` | Do nhóm người dùng thử cảm thấy khó dùng và nhiều thao tác rườm rà cũng như tính ứng dụng không cao.  |
+| 18/9 - CP5 | Làm rõ vai trò của `/summary`, `/tasks` và link `Nguồn` | `/summary` dùng để xem thông tin quan trọng trong 24 giờ, `/tasks` để xem việc chưa hoàn thành, `/done` để đóng task; link `Nguồn` chỉ dùng khi cần kiểm chứng chứ không bắt buộc mở cho mọi item. |
 | 18/9 - CP5 | Giữ cơ chế cảnh báo cho thông tin mơ hồ thay vì tự suy diễn deadline | Với message như “nộp tối nay”, hệ thống để `deadline_iso = null` và hiển thị `Confidence: 0.70 ⚠️`, tránh tự bịa thời gian không có căn cứ. |
 
