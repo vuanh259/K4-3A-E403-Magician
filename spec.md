@@ -263,6 +263,7 @@ Theo nguyên tắc minh bạch khoa học của sự kiện (*"Số xấu vẫn 
   1. **Lê Nguyễn Thái Dương** (Mã học viên: `2A202602383`)
   2. **Nguyễn Xuân Khuê** (Mã học viên: `2A202602999`)
 - **Thời gian & địa điểm dự kiến:** 14:00 – 15:30 ngày 18/9/2026 tại Phòng E403.
+- **Biên bản kiểm thử người dùng thực tế (Mom Test):** Chi tiết nhật ký thao tác và phân tích phản hồi xem tại [`validation/user_testing_log.md`](validation/user_testing_log.md).
 - **Kịch bản kiểm thử (Test Protocol):**
   1. *Bước 1 (Trải nghiệm thực tế):* Học viên truy cập server Discord lớp học, gõ lệnh `/summary all` hoặc chọn 3 kênh theo dõi chính.
   2. *Bước 2 (Kiểm chứng kết quả):* Đánh giá độ chính xác của bản tin Action Digest: task có đúng không, deadline có bịa không, trích dẫn gốc có mở đúng tin nhắn không.
