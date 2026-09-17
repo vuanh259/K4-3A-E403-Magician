@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="utf-8" />
@@ -853,6 +853,28 @@
   </div>
 </div>
 
+<div class="modal" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+  <div class="modal-card">
+    <h4 id="editTitle">✏️ Sửa task (HAX G9: lệnh /correct)</h4>
+    <div style="font-size:13px;color:#949ba4;margin-bottom:12px">Mô phỏng lệnh <code>/correct task_id</code> của bot thật để sửa deadline hoặc mức ưu tiên nếu AI hiểu sai.</div>
+    <label style="display:block;font-size:12px;color:#b5bac1;margin-bottom:4px">Tiêu đề task:</label>
+    <input id="editTaskTitle" style="width:100%;padding:8px 10px;background:#1e1f22;border:1px solid #3b3d44;border-radius:6px;color:#dbdee1;margin-bottom:10px;font-size:13px;box-sizing:border-box" />
+    <label style="display:block;font-size:12px;color:#b5bac1;margin-bottom:4px">Deadline / Thời gian:</label>
+    <input id="editTaskDeadline" style="width:100%;padding:8px 10px;background:#1e1f22;border:1px solid #3b3d44;border-radius:6px;color:#dbdee1;margin-bottom:10px;font-size:13px;box-sizing:border-box" />
+    <label style="display:block;font-size:12px;color:#b5bac1;margin-bottom:4px">Độ ưu tiên:</label>
+    <select id="editTaskPriority" style="width:100%;padding:8px 10px;background:#1e1f22;border:1px solid #3b3d44;border-radius:6px;color:#dbdee1;margin-bottom:14px;font-size:13px;box-sizing:border-box">
+      <option value="🔴 High · Task">🔴 High · Task (Khẩn cấp / Deadline < 24h)</option>
+      <option value="🟠 Medium · Schedule">🟠 Medium · Schedule (Quan trọng)</option>
+      <option value="🟢 Low · Info">🟢 Low · Info (Theo dõi)</option>
+      <option value="🟡 Needs review">🟡 Needs review (Cần kiểm tra)</option>
+    </select>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="cancelEditModal" type="button" style="background:#4e5058;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer">Hủy</button>
+      <button id="saveEditModal" type="button" style="background:#5865f2;color:#fff;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:600">Lưu thay đổi (/correct)</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (() => {
   const input = document.getElementById('commandInput');
@@ -1052,6 +1074,7 @@
             <div style="margin-top:4px">Deadline: <b>21:00 hôm nay</b></div>
             <div class="source">Nguồn: #announcements · Lab Coach<br>
               <button type="button" data-source="Lab Coach — #announcements — “Nhớ hoàn thành Lab 5 và nộp trước 21:00 hôm nay nhé.”">Xem message gốc</button>
+              <button type="button" class="edit-card-btn" style="background:#2b2d31;border:1px solid #4e5058;color:#5865f2;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;margin-left:4px">✏️ Sửa task</button>
             </div>
           </div>
 
@@ -1061,6 +1084,7 @@
             <div style="margin-top:4px"><b>E403 → E402</b> · ngày mai</div>
             <div class="source">Nguồn: #class-3a · TA Minh<br>
               <button type="button" data-source="TA Minh — #class-3a — “Ngày mai lớp đổi phòng từ E403 sang E402.”">Xem message gốc</button>
+              <button type="button" class="edit-card-btn" style="background:#2b2d31;border:1px solid #4e5058;color:#5865f2;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;margin-left:4px">✏️ Sửa task</button>
             </div>
           </div>
 
@@ -1070,6 +1094,7 @@
             <div style="margin-top:4px">Thời gian: <b>20:30 hôm nay</b></div>
             <div class="source">Nguồn: #team-magician · Team Lead<br>
               <button type="button" data-source="Team Lead — #team-magician — “20:30 tối nay họp team để chốt demo CP2.”">Xem message gốc</button>
+              <button type="button" class="edit-card-btn" style="background:#2b2d31;border:1px solid #4e5058;color:#5865f2;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;margin-left:4px">✏️ Sửa task</button>
             </div>
           </div>
 
@@ -1079,6 +1104,7 @@
             <div style="margin-top:4px">Không rõ đây là task hay chat thông thường.</div>
             <div class="source">Nguồn: #team-magician · Student B<br>
               <button type="button" data-source="Student B — #team-magician — “Tối mai làm nhé.” — AI không đủ căn cứ để tự kết luận.">Xem message gốc</button>
+              <button type="button" class="edit-card-btn" style="background:#2b2d31;border:1px solid #4e5058;color:#5865f2;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;margin-left:4px">✏️ Sửa task</button>
             </div>
           </div>
         </div>
@@ -1091,7 +1117,7 @@
           </div>
         </div>
         <div style="margin-top:10px;font-size:12px;color:#b5bac1">
-          💡 AI chỉ tổng hợp trong các channel được chọn. User vẫn có thể mở message nguồn để xác nhận.
+          💡 AI chỉ tổng hợp trong các channel được chọn. User vẫn có thể mở message nguồn để xác nhận hoặc bấm <strong>✏️ Sửa task</strong> để chỉnh sửa (HAX G9: /correct).
         </div>
       </div>`;
     const resultMsg = addMessage({
@@ -1104,6 +1130,50 @@
       btn.addEventListener('click',()=>{
         sourceBody.textContent = btn.dataset.source;
         modal.classList.add('show');
+      });
+    });
+
+    const editModal = document.getElementById('editModal');
+    const editTaskTitle = document.getElementById('editTaskTitle');
+    const editTaskDeadline = document.getElementById('editTaskDeadline');
+    const editTaskPriority = document.getElementById('editTaskPriority');
+    const cancelEditModal = document.getElementById('cancelEditModal');
+    const saveEditModal = document.getElementById('saveEditModal');
+    let currentCardToEdit = null;
+
+    cancelEditModal.onclick = () => editModal.classList.remove('show');
+    editModal.onclick = (e) => { if(e.target === editModal) editModal.classList.remove('show'); };
+
+    saveEditModal.onclick = () => {
+      if (currentCardToEdit) {
+        const strong = currentCardToEdit.querySelector('strong');
+        const dlDiv = currentCardToEdit.querySelector('div[style*="margin-top:4px"]');
+        const label = currentCardToEdit.querySelector('.label');
+        if (strong) strong.textContent = editTaskTitle.value;
+        if (dlDiv) dlDiv.innerHTML = `Deadline: <b>${editTaskDeadline.value}</b> <span style="font-size:11px;color:#57f287">(đã sửa)</span>`;
+        if (label) label.textContent = editTaskPriority.value;
+        editModal.classList.remove('show');
+
+        const notice = addMessage({
+          avatar: 'AI', color: '#57f287', author: 'AI Discord Assistant · HAX G9 (/correct)', bot: true,
+          html: `<div style="background:#1e382b;border:1px solid #57f287;padding:8px 12px;border-radius:6px;font-size:12px;color:#dbdee1">
+            ✏️ <strong>/correct:</strong> Đã cập nhật task <em>"${editTaskTitle.value}"</em> thành công. Lịch reminder đã được tính lại trong database.
+          </div>`
+        });
+        markGenerated(notice);
+      }
+    };
+
+    resultMsg.querySelectorAll('.edit-card-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        currentCardToEdit = e.target.closest('.summary-card');
+        const strong = currentCardToEdit.querySelector('strong');
+        const dlDiv = currentCardToEdit.querySelector('div[style*="margin-top:4px"]');
+        const label = currentCardToEdit.querySelector('.label');
+        editTaskTitle.value = strong ? strong.textContent.trim() : '';
+        editTaskDeadline.value = dlDiv ? dlDiv.textContent.replace('Deadline:', '').replace('Thời gian:', '').trim() : '';
+        if (label) editTaskPriority.value = label.textContent.trim();
+        editModal.classList.add('show');
       });
     });
 

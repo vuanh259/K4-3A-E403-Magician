@@ -1,4 +1,4 @@
-﻿# NHẬT KÝ BẰNG CHỨNG & DỮ LIỆU KHẢO SÁT (EVIDENCE LOG) — CP1
+# NHẬT KÝ BẰNG CHỨNG & DỮ LIỆU KHẢO SÁT (EVIDENCE LOG) — CP1
 
 Tài liệu ghi nhận toàn bộ dữ liệu khảo sát thực tế và khai phá dữ liệu phục vụ thẩm định đề tài Mini Hackathon AI Batch 04 (Lớp 3A · Phòng E403 · Nhóm Magician).
 
@@ -6,9 +6,9 @@ Tài liệu ghi nhận toàn bộ dữ liệu khảo sát thực tế và khai p
 
 ## 1. Dữ liệu khảo sát thực tế (Đạt Chuẩn A)
 - **Phương pháp:** Khảo sát học viên qua biểu mẫu Google Forms về trải nghiệm theo dõi thông tin học tập trên Discord.
-- **Quy mô mẫu:** $n = 30$ học viên (vượt chuẩn tối thiểu 20 người ngoài nhóm).
-- **Tỷ lệ xác nhận nỗi đau:** **50.0% (15/30)** học viên xác nhận từng bỏ lỡ hoặc phát hiện muộn thông tin quan trọng trên Discord (vượt chuẩn tối thiểu 50%).
-- **Tỷ lệ mong muốn giải pháp:** **96.7% (29/30)** học viên bày tỏ mong muốn có một công cụ tự động tổng hợp task, deadline, thay đổi lịch từ Discord.
+- **Quy mô mẫu:** $n = 33$ học viên (trong đó 30 người ngoài nhóm, vượt xa chuẩn tối thiểu 20 người ngoài nhóm).
+- **Tỷ lệ xác nhận nỗi đau:** **51.5% (17/33)** học viên xác nhận từng bỏ lỡ hoặc phát hiện muộn thông tin quan trọng trên Discord (vượt chuẩn tối thiểu 50%).
+- **Tỷ lệ mong muốn giải pháp:** **97.0% (32/33)** học viên bày tỏ mong muốn có một công cụ tự động tổng hợp task, deadline, thay đổi lịch từ Discord.
 
 ### Các số liệu định lượng chi tiết:
 - **Số channel Discord phải theo dõi:**
