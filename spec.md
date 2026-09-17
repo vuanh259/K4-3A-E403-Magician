@@ -282,14 +282,16 @@ Theo nguyên tắc minh bạch khoa học của sự kiện (*"Số xấu vẫn 
   - *Chi phí sai sót (Cost of error):* Nếu bot tự động DM liên tục (Phương án 1), khi gặp false positive sẽ làm phiền và gây ức chế, dẫn đến việc học viên block bot (thất bại hoàn toàn). Phương án 2 tôn trọng quyền kiểm soát của người dùng (HAX G17 / PAIR Control), đảm bảo bot là người hỗ trợ tin cậy và không bao giờ spam.
 
 ## §9. Changelog
+## §9. Changelog
+
 | Thời điểm | Đổi gì | Vì sao |
 |---|---|---|
-| 16/9 - 19:00 | Khởi tạo Canvas & Spec CP1 | Chốt ý tưởng Action Digest & Canvas 4 ô |
-| 16/9 - 19:35 | Cập nhật Canvas theo slide chữa bài | Gọt 4 ô theo chuẩn Pain · Bằng chứng · Impact · Lát cắt |
-| 16/9 - 20:20 | Hoàn thiện CP2 với Companion Web Mockup | Xây dựng wireframe tương tác `codebase/index.html` mô phỏng 4 kịch bản bấm thử, kiểm chứng HAX G1/G2/G9/G11 |
-| 17/9 - 10:30 | Xây dựng Golden Set 22 case & chạy Eval | Đo lường định lượng cho CP3 & khoá Quality Bar theo form hướng dẫn |
-| 17/9 - 14:50 | Hoàn thiện toàn diện AI Spec & Đóng băng Quality Bar (CP4) | Bổ sung phân tích sản phẩm tương tự thứ 2 (§3), chuẩn hóa công thức Quality Bar định lượng (§7), tự khai báo 3 hạn chế thực tế và ma trận phân công chi tiết kèm kế hoạch kiểm thử CP5 (§8) |
-| 17/9 - 15:40 | Chuẩn hóa Working Prototype cho Tiêu chí R5 (8 điểm) | Khẳng định Working Prototype chính thức là Bot Discord thật (`codebase/app.py`), làm rõ phần Thật (Discord bot + LLM + SQLite + DM reminder) vs phần Mock (`index.html` companion UI) |
-| 17/9 - 16:15 | Chuẩn hóa kịch bản §5 theo cơ chế Slash Command | Phân định rõ 2 nguồn Input: (1) Tin nhắn kênh quét bằng /summary và (2) Form validation khi điền lệnh slash command (/correct, /done) |
-| 17/9 - 16:30 | Chuẩn hóa số liệu nghiệm thu CP3 & cập nhật 3 ca FAIL | Khớp đúng kết quả thực tế với TC14, TC18, TC19 (TC11 PASS); minh bạch trạng thái Safety Hard Gate chưa đạt do Prompt Injection (95.5%) và giải trình phương pháp đo (Script vs Human Audit) |
+| 16/9 - CP1 | Chốt bài toán **Discord Action Digest**: tự động lọc Task, Deadline và thay đổi lịch từ các kênh Discord | Khảo sát 33 học viên cho thấy 51.5% từng bỏ lỡ hoặc phát hiện muộn thông tin quan trọng và 97% mong muốn có công cụ tự động tổng hợp. |
+| 16/9 - CP2 | Chọn luồng **On-demand `/summary` + Conditional/Augment** | Giảm rủi ro bot spam hoặc tự động hành động sai; người dùng chủ động gọi `/summary` và vẫn có quyền kiểm chứng/sửa kết quả AI. |
+| 17/9 - CP3 | Hoàn thiện Working Prototype trên Discord và xây dựng **Golden Set 22 cases** | Kiểm chứng quyết định của AI bằng dữ liệu thực tế thay vì chỉ demo giao diện. |
+| 17/9 - CP4 | Đóng băng Quality Bar: **Pass Rate ≥ 85%, Zero Hallucination = 100%, Out-of-scope Safe Rejection = 100%** | Kết quả đạt 19/22 = 86.4%, nhưng Zero Hallucination chỉ 95.5% do TC19 Prompt Injection; nhóm giữ nguyên Quality Bar và công khai failure. |
+| 18/9 - CP5 | Kiểm thử sản phẩm với **5 người dùng ngoài nhóm**: Lê Nguyễn Thái Dương, Nguyễn Xuân Khuê, Nguyễn Minh Lương, Nguyễn Duy Phong, Nguyễn Quốc Việt | Kiểm chứng khả năng sử dụng `/summary`, reminder, `/correct`, `/done`, Confidence và khả năng giảm việc người dùng phải đọc lại toàn bộ Discord. |
+| 18/9 - CP5 | **Cải thiện chức năng `/correct`**: hiển thị Task ID ngay trong reminder; cho phép sửa deadline trực tiếp; sau khi sửa, hệ thống cập nhật SQLite và tính lại reminder | Kịch bản test cho thấy AI có thể nhận nhầm lịch họp **22:00 thành 14:00**. Đến **13:30**, user nhận reminder sai mới phát hiện vấn đề và dùng `/correct` sửa lại thành 22:00. Cách này giúp user sửa lỗi ngay khi gặp mà không cần quay lại đọc toàn bộ Discord. |
+| 18/9 - CP5 | Làm rõ vai trò của `/summary`, `/tasks`, `/done` và link `Nguồn` | `/summary` dùng để xem thông tin quan trọng trong 24 giờ, `/tasks` để xem việc chưa hoàn thành, `/done` để đóng task; link `Nguồn` chỉ dùng khi cần kiểm chứng chứ không bắt buộc mở cho mọi item. |
+| 18/9 - CP5 | Giữ cơ chế cảnh báo cho thông tin mơ hồ thay vì tự suy diễn deadline | Với message như “nộp tối nay”, hệ thống để `deadline_iso = null` và hiển thị `Confidence: 0.70 ⚠️`, tránh tự bịa thời gian không có căn cứ. |
 
