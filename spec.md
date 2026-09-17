@@ -124,7 +124,7 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 | Nguyên tắc | Mô tả nguyên tắc | Vị trí áp dụng cụ thể trên `codebase/index.html` |
 |---|---|---|
 | **HAX G1 (Nêu rõ năng lực hệ thống)** | Giúp người dùng hiểu hệ thống có thể làm gì và không làm gì | 1. Dòng mô tả ngay dưới Header: *"Chuyên trích xuất Task, Deadline & Lịch đổi từ Discord"*. <br>2. Phản hồi của bot khi người dùng hỏi *"giải thích Transformer"*: Bot từ chối và hướng dẫn gặp VLearn Tutor. |
-| **HAX G2 (Thể hiện rõ độ tin cậy)** | Hiển thị mức độ chắc chắn của kết quả AI | 1. Huy hiệu màu sắc: 🔴 P1 Khẩn cấp, 🟡 P2 Quan trọng, 🟢 P3 Theo dõi.<br>2. Khi hỏi *"khi nào nộp lab 2?"*, bot hiển thị nhãn cảnh báo màu vàng: `[⚠️ Mốc giờ chưa cụ thể]` và ghi rõ *"AI không tự bịa giờ 23:59"*. |
+| **HAX G2 (Thể hiện rõ độ tin cậy)** | Hiển thị mức độ chắc chắn của kết quả AI | 1. Huy hiệu màu sắc: 🔴 High (Khẩn cấp), 🟠 Medium (Quan trọng), 🟢 Low (Theo dõi).<br>2. Với tin nhắn mơ hồ hoặc thiếu căn cứ (như tin *"Tối mai làm nhé"* trên `index.html`), bot gắn nhãn **`🟡 Needs review`** cảnh báo: *"Không rõ đây là task hay chat thông thường. AI không đủ căn cứ để tự kết luận"*; trên Bot Discord thật (`ui.py` L80), bot hiển thị **`Confidence: < 0.80 ⚠️ (Mốc giờ/thông tin cần xác nhận lại)`**, đặt `deadline_iso: null` chứ tuyệt đối không tự bịa mốc giờ 23:59. |
 | **HAX G9 (Hỗ trợ sửa sai tức thì)** | Cho phép người dùng can thiệp và sửa đổi kết quả trực tiếp | 1. **Trên Bot Discord thật (`codebase/app.py` L422):** Lệnh slash command `/correct task_id [deadline_iso] [priority] [title]`, cập nhật trực tiếp vào database SQLite và tính lại reminder.<br>2. **Trên Prototype (`codebase/index.html`):** Nút **"✏️ Sửa task"** trên từng thẻ mở Modal chỉnh sửa deadline/priority và lưu cập nhật tức thì. |
 | **HAX G11 (Giải thích lý do & Dẫn nguồn)** | Giúp người dùng hiểu vì sao AI đưa ra kết quả | Trên mỗi thẻ công việc đều có ô dẫn nguồn màu xám đen trích nguyên văn câu nói của TA/Giảng viên và thời điểm gửi. |
 
@@ -132,7 +132,7 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 
 | STT | Lớp chỗ khó | Tình huống cụ thể (Input) | Nguy cơ lỗi | Hành vi mong muốn (Nói gì, Hiện gì, Cho user làm gì tiếp) | Nguyên tắc áp dụng (HAX/PAIR) |
 |---|---|---|---|---|---|
-| 1 | ① Nguồn sự thật | "Bài tập Lab 2 nộp vào tối nay nhé" | AI tự ý bịa mốc giờ 23:59 (Hallucination) | Hiện thẻ Lab 2, gắn cờ hổ phách `[⚠️ Mốc giờ chưa cụ thể]`, trích nguyên văn "tối nay", hiện nút "Sửa hạn nộp" | **HAX G2** (Rõ độ tin cậy) & **HAX G11** (Dẫn nguồn) |
+| 1 | ① Nguồn sự thật | "Bài tập Lab 2 nộp vào tối nay nhé" | AI tự ý bịa mốc giờ 23:59 (Hallucination) | Trích xuất task nhưng đặt deadline_iso: null; trên prototype hiển thị nhãn 🟡 Needs review, trên bot hiển thị Confidence < 0.80 kèm cảnh báo cần xác nhận mốc giờ, không tự bịa giờ | **HAX G2** (Rõ độ tin cậy) & **HAX G11** (Dẫn nguồn) |
 | 2 | ① Nguồn sự thật | Học viên A nhắn: "Chắc mai nộp lab đấy cả nhà" | AI nhặt tin đồn của học viên thành deadline thật | Lọc bỏ qua tin nhắn không thuộc người có thẩm quyền (GV/TA/BTC), không tạo thẻ công việc | **PAIR Explainability & Grounding** |
 | 3 | ② Mơ hồ / Thiếu tin | TA nhắn: "Tuần này nhớ nộp báo cáo tiến độ nhé" | AI đoán mò thứ hoặc bỏ sót việc | Gắn nhãn `[Chưa rõ ngày cụ thể]`, tự động xếp vào nhóm 🟢 P3 (Theo dõi), gợi ý hỏi lại TA | **HAX G2** & **PAIR Graceful Failure** |
 | 4 | ② Mơ hồ / Thiếu tin | GV nhắn: "Mai nộp spec nha cả lớp" | AI không có giờ nộp chính xác | Gắn nhãn `[Mai - Chưa rõ giờ]`, xếp vào 🟡 P2 (Quan trọng), hiển thị nút "Sửa hạn nộp" để cập nhật | **HAX G9** (Hỗ trợ sửa sai tức thì) |
@@ -146,8 +146,8 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
   - *Thao tác:* Người dùng gõ lệnh slash command `/summary all` (hoặc `/summary` tick chọn các kênh cần quét) trên Discord, hoặc bấm nút gợi ý 1 trên `index.html`.
   - *Xử lý & Kết quả:* Bot hiển thị thông báo đang quét tin nhắn trong 24 giờ qua, AI lọc nhiễu và trả về Bản tin Action Digest Embed với các thẻ việc chia theo 🔴 P1 Khẩn cấp, 🟡 P2 Quan trọng, 🟢 P3 Theo dõi kèm trích dẫn câu gốc và nút đánh dấu hoàn thành.
 - **Đường 2 — Xử lý khi AI thiếu tự tin (Low-confidence path — ②):**
-  - *Thao tác:* Người dùng bấm nút gợi ý 2: *"khi nào nộp lab 2?"* (tin nhắn gốc của TA chỉ ghi "nộp vào tối nay").
-  - *Xử lý & Kết quả:* AI phát hiện thiếu mốc giờ chính xác, trả về thẻ bài tập Lab 2 kèm cờ cảnh báo hổ phách `[⚠️ Mốc giờ chưa cụ thể]` và giải thích: *"AI không tự bịa 23:59 vì tin gốc chỉ nói 'tối nay'"* (HAX G2).
+  - *Thao tác:* Người dùng gõ lệnh `/summary` quét kênh có tin nhắn mơ hồ (ví dụ: tin *"Tối mai làm nhé"* trong `#team-magician` hoặc thông báo chỉ ghi *"nộp vào tối nay"* không rõ giờ).
+  - *Xử lý & Kết quả:* AI phát hiện độ tin cậy thấp (`confidence = 0.70 < 0.80`), không tự ý gán giờ mặc định 23:59. Trên prototype `index.html`, bot hiển thị thẻ màu vàng **`🟡 Needs review`** cảnh báo: *"Không rõ đây là task hay chat thông thường. AI không đủ căn cứ để tự kết luận"*. Trên bot Discord thật (`ui.py` L80), bot hiển thị: *"Confidence: 0.70 ⚠️ (Mốc giờ/thông tin cần xác nhận lại)"* và trích dẫn câu gốc để người dùng tự xác nhận hoặc dùng `/correct` để bổ sung (HAX G2).
 - **Đường 3 — Xử lý khi không tìm thấy căn cứ (Failure / Zero Grounding — ①):**
   - *Thao tác:* Người dùng gõ `/summary` trên kênh `#thao-luan-chung` chỉ toàn tin nhắn rủ đi ăn trưa và tán gẫu.
   - *Xử lý & Kết quả:* Bot phản hồi an toàn: *"Không phát hiện task, deadline hoặc lịch thay đổi nào trong 24 giờ qua từ các kênh đã chọn"*, tuyệt đối không bịa đặt task giả định (Zero Hallucination).
