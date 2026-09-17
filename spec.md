@@ -111,6 +111,7 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
   4. KHÔNG tra cứu điểm danh cá nhân (thuộc thẩm quyền TA).
   5. KHÔNG tự động đăng thông báo lên kênh chat chung khi chưa được kiểm duyệt.
 - **Mức prototype nhắm tới:** [x] Working Prototype — Bot Discord AI thật chạy trực tiếp trên Server lớp học (`codebase/app.py`)
+  > [!IMPORTANT]
   > **Khẳng định nghiệm thu Tiêu chí R5 (8 điểm — `codebase/` + demo):**
   > Bản mẫu của nhóm là **BOT DISCORD THẬT 100%** ([`codebase/app.py`](codebase/app.py)), KHÔNG PHẢI bản web mock (`index.html`). Hệ thống chạy live thực tế trên nền tảng Discord, đáp ứng đầy đủ 3 điều kiện của Rubric R5:
   > 1. **Chạy End-to-End theo lát cắt đã khai:** Học viên gõ lệnh `/summary all` $\to$ Bot quét tin nhắn thật 24h từ các kênh $\to$ AI phân tích lọc tin $\to$ Trả về Embed bản tin Action Digest với link nguồn $\to$ Học viên gõ `/correct` sửa trực tiếp vào SQLite $\to$ Hệ thống tự động gửi DM nhắc nhở trước hạn chót. Toàn bộ luồng khép kín không can thiệp thủ công giữa chừng.
@@ -261,13 +262,16 @@ Theo nguyên tắc minh bạch khoa học của sự kiện (*"Số xấu vẫn 
 - **Đối tượng thử nghiệm (2 Willing Users đã cam kết từ CP1):**
   1. **Lê Nguyễn Thái Dương** (Mã học viên: `2A202602383`)
   2. **Nguyễn Xuân Khuê** (Mã học viên: `2A202602999`)
+- **Thời gian & địa điểm dự kiến:** 14:00 – 15:30 ngày 18/9/2026 tại Phòng E403.
+- **Biên bản kiểm thử người dùng thực tế (Mom Test):** Chi tiết nhật ký thao tác và phân tích phản hồi xem tại [`validation/user_testing_log.md`](validation/user_testing_log.md).
 - **Kịch bản kiểm thử (Test Protocol):**
   1. *Bước 1 (Trải nghiệm thực tế):* Học viên truy cập server Discord lớp học, gõ lệnh `/summary all` hoặc chọn 3 kênh theo dõi chính.
   2. *Bước 2 (Kiểm chứng kết quả):* Đánh giá độ chính xác của bản tin Action Digest: task có đúng không, deadline có bịa không, trích dẫn gốc có mở đúng tin nhắn không.
   3. *Bước 3 (Can thiệp sửa đổi - HAX G9):* Bấm nút *"✏️ Sửa task"* (hoặc gõ lệnh `/correct task_id`) để chỉnh sửa thời gian/độ ưu tiên và lưu lại vào database.
-  4. *Bước 4 (Nhận nhắc nhở tự động):* Nhận tin nhắn DM nhắc nhở tự động trước deadline 30 phút.
+  4. *Bước 4 (Nhận nhắc nhở tự động):* Nhận tin nhắn DM nhắc nhở tự động trước deadline 15 phút.
 - **Tiêu chí nghiệm thu (Acceptance Criteria):**
   - Thời gian học viên nắm bắt toàn bộ việc cần làm trong ngày giảm từ 5–10 phút xuống còn 2–3 phút.
+  - Điểm mức độ hài lòng và sẵn sàng sử dụng (CSAT) $\ge 4.5/5.0$.
   - 100% học viên xác nhận bot không bịa đặt deadline ảo.
 
 ### 8.3. Multi-prototype (Cân nhắc thiết kế & Quyết định chọn phương án):
@@ -279,14 +283,10 @@ Theo nguyên tắc minh bạch khoa học của sự kiện (*"Số xấu vẫn 
   - *Chi phí sai sót (Cost of error):* Nếu bot tự động DM liên tục (Phương án 1), khi gặp false positive sẽ làm phiền và gây ức chế, dẫn đến việc học viên block bot (thất bại hoàn toàn). Phương án 2 tôn trọng quyền kiểm soát của người dùng (HAX G17 / PAIR Control), đảm bảo bot là người hỗ trợ tin cậy và không bao giờ spam.
 
 ## §9. Changelog
+
 | Thời điểm | Đổi gì | Vì sao |
-|---|---|---|
-| 16/9 - 19:00 | Khởi tạo Canvas & Spec CP1 | Chốt ý tưởng Action Digest & Canvas 4 ô |
-| 16/9 - 19:35 | Cập nhật Canvas theo slide chữa bài | Gọt 4 ô theo chuẩn Pain · Bằng chứng · Impact · Lát cắt |
-| 16/9 - 20:20 | Hoàn thiện CP2 với Companion Web Mockup | Xây dựng wireframe tương tác `codebase/index.html` mô phỏng 4 kịch bản bấm thử, kiểm chứng HAX G1/G2/G9/G11 |
-| 17/9 - 10:30 | Xây dựng Golden Set 22 case & chạy Eval | Đo lường định lượng cho CP3 & khoá Quality Bar theo form hướng dẫn |
-| 17/9 - 14:50 | Hoàn thiện toàn diện AI Spec & Đóng băng Quality Bar (CP4) | Bổ sung phân tích sản phẩm tương tự thứ 2 (§3), chuẩn hóa công thức Quality Bar định lượng (§7), tự khai báo 3 hạn chế thực tế và ma trận phân công chi tiết kèm kế hoạch kiểm thử CP5 (§8) |
-| 17/9 - 15:40 | Chuẩn hóa Working Prototype cho Tiêu chí R5 (8 điểm) | Khẳng định Working Prototype chính thức là Bot Discord thật (`codebase/app.py`), làm rõ phần Thật (Discord bot + LLM + SQLite + DM reminder) vs phần Mock (`index.html` companion UI) |
-| 17/9 - 16:15 | Chuẩn hóa kịch bản §5 theo cơ chế Slash Command | Phân định rõ 2 nguồn Input: (1) Tin nhắn kênh quét bằng /summary và (2) Form validation khi điền lệnh slash command (/correct, /done) |
-| 17/9 - 16:30 | Chuẩn hóa số liệu nghiệm thu CP3 & cập nhật 3 ca FAIL | Khớp đúng kết quả thực tế với TC14, TC18, TC19 (TC11 PASS); minh bạch trạng thái Safety Hard Gate chưa đạt do Prompt Injection (95.5%) và giải trình phương pháp đo (Script vs Human Audit) |
+|---|---|---|  
+| 18/9 - CP5 | Xóa chức năng `/correct` | Do nhóm người dùng thử cảm thấy khó dùng và nhiều thao tác rườm rà cũng như tính ứng dụng không cao.|  
+| 18/9 - CP5 | Làm rõ vai trò của `/summary`, `/tasks` và link `Nguồn` | `/summary` dùng để xem thông tin quan trọng trong 24 giờ, `/tasks` để xem việc chưa hoàn thành, `/done` để đóng task; link `Nguồn` chỉ dùng khi cần kiểm chứng chứ không bắt buộc mở cho mọi item. |  
+| 18/9 - CP5 | Giữ cơ chế cảnh báo cho thông tin mơ hồ thay vì tự suy diễn deadline | Với message như “nộp tối nay”, hệ thống để `deadline_iso = null` và hiển thị `Confidence: 0.70 ⚠️`, tránh tự bịa thời gian không có căn cứ. |  
 
