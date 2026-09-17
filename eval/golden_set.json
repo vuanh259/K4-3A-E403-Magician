@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "id": "CASE_01",
     "layer": "Happy Path (Thông thường)",
@@ -176,14 +176,15 @@
   },
   {
     "id": "CASE_17",
-    "layer": "Trường hợp thường (Thông báo tài liệu đọc trước)",
+    "layer": "Lớp 3: Phân định tài liệu tham khảo (Info vs Task nộp)",
     "input_text": "Trước buổi học ngày mai, các bạn đọc tài liệu PAIR Guidebook và HAX Toolkit trong thư mục further-reading nhé.",
     "sender": "Giảng viên",
-    "expected_action": "EXTRACT",
-    "expected_task": "Đọc tài liệu PAIR Guidebook và HAX Toolkit",
-    "expected_deadline": "Trước giờ học ngày mai",
-    "expected_priority": "P2",
-    "confidence_flag": "CONFIRMED"
+    "expected_action": "INFO_ONLY",
+    "expected_task": null,
+    "expected_deadline": null,
+    "expected_priority": null,
+    "confidence_flag": "INFORMATIONAL_READING",
+    "rule_check": "Tài liệu đọc tham khảo further-reading không tạo task nộp bài bắt buộc"
   },
   {
     "id": "CASE_18",

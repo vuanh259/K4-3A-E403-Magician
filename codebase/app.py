@@ -1,6 +1,10 @@
 import asyncio
+import sys
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 import discord
 from discord import app_commands
@@ -212,8 +216,9 @@ async def run_summary(
 
     print(
         f"[SUMMARY] Found {len(messages)} messages "
-        f"from {len(channels)} channels"
+        f"from {len(channels)} channels: {', '.join(f'#{n}' for n in names)}"
     )
+    print(f"[AI] Đang gửi {len(messages)} tin nhắn sang AI ({settings.ai_model}) để trích xuất...")
 
     result = await analyze_messages(
         messages=messages,
@@ -235,6 +240,13 @@ async def run_summary(
             }
         )
     ]
+
+    print(f"[AI] Phân tích hoàn tất! Trích xuất được {len(items)} việc quan trọng:")
+    for i, it in enumerate(items, 1):
+        prio = str(it.get("priority", "medium")).upper()
+        dl = it.get("deadline_iso") or "Không có"
+        ch = it.get("source_channel") or "unknown"
+        print(f"   {i}. [{prio}] {it.get('title')} | Hạn: {dl} | Nguồn: #{ch}")
 
     task_ids = await store.upsert_items(
         user_id=interaction.user.id,
@@ -272,6 +284,9 @@ async def run_summary(
         ),
         embed=embed,
     )
+
+    channel_title = getattr(interaction.channel, "name", "channel")
+    print(f"[DISCORD] Đã gửi bản tin Embed tới #{channel_title} cho {interaction.user.name} thành công!")
 
     await interaction.followup.send(
         f"✅ Xong. Đã phân tích **{len(messages)} message** "

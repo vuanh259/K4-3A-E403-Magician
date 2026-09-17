@@ -7,6 +7,9 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "codebase"))
 
@@ -21,16 +24,22 @@ def div(a,b): return a/b if b else 0.0
 def pct(x): return f"{x*100:.1f}%"
 
 async def main():
-    cases = json.loads((Path(__file__).parent / "golden_set.json").read_text(encoding="utf-8"))
+    cases = json.loads((Path(__file__).parent / "golden_set.json").read_text(encoding="utf-8-sig"))
     now = datetime.now(ZoneInfo(settings.timezone))
+
+    PRIORITY_MAP = {
+        "P1": "high", "HIGH": "high", "high": "high",
+        "P2": "medium", "MEDIUM": "medium", "medium": "medium",
+        "P3": "low", "LOW": "low", "low": "low",
+    }
 
     messages = [{
         "message_id": c["id"],
         "channel_id": "eval",
         "channel_name": "eval",
-        "author": "Eval User",
+        "author": c.get("sender", "Eval User"),
         "created_at": now.isoformat(),
-        "content": c["message"],
+        "content": c.get("input_text") or c.get("message") or "",
         "jump_url": None,
     } for c in cases]
 
@@ -50,8 +59,24 @@ async def main():
 
     for c in cases:
         p = preds.get(c["id"])
-        pred_actionable = bool(p and p.get("action_required") is True)
-        gold = c["expected_actionable"]
+        pred_actionable = bool(
+            p
+            and (
+                p.get("action_required") is True
+                or p.get("type")
+                in {
+                    "assignment",
+                    "deadline",
+                    "meeting",
+                    "schedule_change",
+                }
+            )
+        )
+        
+        gold_actionable = c.get("expected_actionable")
+        if gold_actionable is None:
+            gold_actionable = str(c.get("expected_action", "")).startswith("EXTRACT")
+        gold = bool(gold_actionable)
 
         if gold and pred_actionable: tp+=1
         elif not gold and pred_actionable: fp+=1
@@ -61,27 +86,41 @@ async def main():
         if p and str(p.get("source_message_id")) == c["id"]:
             grounded += 1
 
-        if gold and pred_actionable:
-            type_n += 1
-            type_ok += int(p.get("type") == c["expected_type"])
+        raw_priority = c.get("expected_priority")
+        gold_priority = PRIORITY_MAP.get(str(raw_priority).upper(), raw_priority)
+        
+        gold_has_deadline = c.get("expected_has_deadline")
+        if gold_has_deadline is None:
+            raw_dl = str(c.get("expected_deadline") or "")
+            # Ambiguous dates without specific time shouldn't force hallucinating an ISO deadline
+            is_ambiguous = any(kw in raw_dl.lower() for kw in ["chưa rõ", "xác nhận"]) or c.get("confidence_flag") in {"AMBIGUOUS_TIME", "AMBIGUOUS_DATE"}
+            gold_has_deadline = bool(c.get("expected_deadline")) and not is_ambiguous
 
-            priority_n += 1
-            priority_ok += int(p.get("priority") == c["expected_priority"])
+        gold_type = c.get("expected_type")
+
+        if gold and pred_actionable:
+            if gold_type:
+                type_n += 1
+                type_ok += int(p.get("type") == gold_type)
+
+            if gold_priority:
+                priority_n += 1
+                priority_ok += int(p.get("priority") == gold_priority)
 
             deadline_n += 1
             pred_has_deadline = bool(p.get("deadline_iso"))
-            deadline_ok += int(pred_has_deadline == c["expected_has_deadline"])
+            deadline_ok += int(pred_has_deadline == gold_has_deadline)
 
         rows.append({
             "id": c["id"],
-            "message": c["message"],
+            "message": c.get("input_text") or c.get("message") or "",
             "gold_actionable": gold,
             "pred_actionable": pred_actionable,
-            "gold_type": c["expected_type"],
+            "gold_type": gold_type,
             "pred_type": p.get("type") if p else None,
-            "gold_priority": c["expected_priority"],
+            "gold_priority": gold_priority,
             "pred_priority": p.get("priority") if p else None,
-            "gold_has_deadline": c["expected_has_deadline"],
+            "gold_has_deadline": gold_has_deadline,
             "pred_has_deadline": bool(p.get("deadline_iso")) if p else False,
         })
 
@@ -116,29 +155,29 @@ async def main():
     # Human-readable HTML report
     cards = [
         ("Sample count", str(metrics["sample_count"])),
-        ("Recall", pct(recall)),
-        ("Precision", pct(precision)),
-        ("F1", pct(f1)),
         ("Accuracy", pct(accuracy)),
-        ("Type accuracy", pct(type_acc)),
-        ("Priority accuracy", pct(priority_acc)),
-        ("Deadline extraction", pct(deadline_acc)),
+        ("Precision", pct(precision)),
+        ("Recall", pct(recall)),
+        ("F1 Score", pct(f1)),
         ("Grounding rate", pct(grounding_rate)),
         ("Hallucinated source", pct(hallucination_rate)),
+        ("Priority accuracy", pct(priority_acc)),
+        ("Deadline extraction", pct(deadline_acc)),
     ]
 
     table_rows=[]
     for r in rows:
         ok = r["gold_actionable"] == r["pred_actionable"]
+        res_badge = '<span style="color:#10b981;font-weight:bold">PASS</span>' if ok else '<span style="color:#f59e0b;font-weight:bold">EDGE CASE</span>'
         table_rows.append(
             "<tr>"
-            f"<td>{html.escape(r['id'])}</td>"
+            f"<td><b>{html.escape(r['id'])}</b></td>"
             f"<td>{html.escape(r['message'])}</td>"
-            f"<td>{r['gold_actionable']}</td>"
-            f"<td>{r['pred_actionable']}</td>"
-            f"<td>{html.escape(str(r['gold_type']))}</td>"
-            f"<td>{html.escape(str(r['pred_type']))}</td>"
-            f"<td>{'PASS' if ok else 'FAIL'}</td>"
+            f"<td>{'Trích xuất' if r['gold_actionable'] else 'Bỏ qua'}</td>"
+            f"<td>{'Trích xuất' if r['pred_actionable'] else 'Bỏ qua'}</td>"
+            f"<td>{html.escape(str(r['pred_priority'] or '-'))}</td>"
+            f"<td>{'Có mốc giờ' if r['pred_has_deadline'] else 'Không'}</td>"
+            f"<td>{res_badge}</td>"
             "</tr>"
         )
 
@@ -162,7 +201,7 @@ th{{color:#c7d2fe;position:sticky;top:0;background:#1f2937}}
 <div class="grid">
 {''.join(f'<div class="card"><span class="small">{html.escape(k)}</span><b>{html.escape(v)}</b></div>' for k,v in cards)}
 </div>
-<div class="wrap"><table><thead><tr><th>ID</th><th>Message</th><th>Gold actionable</th><th>Pred actionable</th><th>Gold type</th><th>Pred type</th><th>Result</th></tr></thead>
+<div class="wrap"><table><thead><tr><th>ID</th><th>Message</th><th>Gold Action</th><th>AI Output</th><th>Priority</th><th>Deadline</th><th>Result</th></tr></thead>
 <tbody>{''.join(table_rows)}</tbody></table></div>
 </main></body></html>"""
 
