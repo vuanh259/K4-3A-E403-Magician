@@ -15,6 +15,12 @@
 
 > Nhóm copy nguyên file README này về repo của mình, rồi điền bảng trên. Cột **Phần việc đảm nhiệm** ghi càng cụ thể càng tốt.
 
+> [!IMPORTANT]
+> **🚀 Dự án Track B — Discord ActionDigest Assistant (Team Magician · Phòng E403):**
+> - **Working Prototype (Tiêu chí R5 · 8 điểm):** [**Bot Discord thật (`codebase/app.py`)**](codebase/README.md) — Chạy trực tiếp trên Discord Gateway, tích hợp LLM thật ([`codebase/ai.py`](codebase/ai.py)), CSDL SQLite ([`codebase/storage.py`](codebase/storage.py)), và dịch vụ nhắc hẹn Direct Message ([`codebase/reminders.py`](codebase/reminders.py)). *(Lưu ý: `codebase/index.html` chỉ là bản companion UI mô phỏng phụ trợ dùng để trình chiếu slide/offline backup; prototype hoạt động 100% thật là con bot Discord).*
+> - **AI Spec trung tâm (Tiêu chí R1, R2, R3, R4):** [**`spec.md`**](spec.md)
+> - **Kết quả Kiểm thử & Quality Bar:** [**`eval/EVAL_REPORT.md`**](eval/EVAL_REPORT.md)
+
 - Thời lượng: **47,5 giờ** từ phát đề đến thuyết trình (ca 3A) — LAB 5 (phát đề + build) · LEC 6 (tiếp tục build theo ca) · LAB 6 (vòng thi)
 - Nhóm: **3-4 người** · thi theo phòng (E403 / E402), chia cụm rồi chung kết phòng — xem *Thể thức thi*
 - **Chia cụm theo bàn**, không cần chung đề tài. Chủ đề tự chọn trong khuôn khổ đề bài

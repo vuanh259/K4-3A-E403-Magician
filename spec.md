@@ -110,56 +110,58 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
   3. KHÔNG tự suy đoán hay bịa đặt mốc giờ khi tin nhắn gốc không có ngày giờ cụ thể.
   4. KHÔNG tra cứu điểm danh cá nhân (thuộc thẩm quyền TA).
   5. KHÔNG tự động đăng thông báo lên kênh chat chung khi chưa được kiểm duyệt.
-- **Mức prototype nhắm tới:** [x] Working Prototype / Bản mẫu tương tác bấm được tại `codebase/index.html`
-  - *Phần giả lập (Mock):* Kênh feed tin nhắn Discord bên trái giả lập 5 tình huống thực tế trích từ `discord-pack/`.
-  - *Phần tương tác thật (Working Interaction):* 
-    - Giao diện Discord Chat Simulator cho phép học viên gõ lệnh tự do (hoặc bấm 4 nút prompt gợi ý).
-    - Bộ xử lý phản hồi câu hỏi: trả về Bản tin Action Digest Embed dạng thẻ công việc có đồng hồ và trích dẫn gốc.
-    - Modal can thiệp sửa đổi trực tiếp (Correction UI) hoạt động mượt mà.
-    - Script thực thi `codebase/ai_extractor.py` và `codebase/chat_bot.py` chạy trực tiếp trên Python.
+- **Mức prototype nhắm tới:** [x] Working Prototype — Bot Discord AI thật chạy trực tiếp trên Server lớp học (`codebase/app.py`)
+  > [!IMPORTANT]
+  > **Khẳng định nghiệm thu Tiêu chí R5 (8 điểm — `codebase/` + demo):**
+  > Bản mẫu của nhóm là **BOT DISCORD THẬT 100%** ([`codebase/app.py`](codebase/app.py)), KHÔNG PHẢI bản web mock (`index.html`). Hệ thống chạy live thực tế trên nền tảng Discord, đáp ứng đầy đủ 3 điều kiện của Rubric R5:
+  > 1. **Chạy End-to-End theo lát cắt đã khai:** Học viên gõ lệnh `/summary all` $\to$ Bot quét tin nhắn thật 24h từ các kênh $\to$ AI phân tích lọc tin $\to$ Trả về Embed bản tin Action Digest với link nguồn $\to$ Học viên gõ `/correct` sửa trực tiếp vào SQLite $\to$ Hệ thống tự động gửi DM nhắc nhở trước hạn chót. Toàn bộ luồng khép kín không can thiệp thủ công giữa chừng.
+  > 2. **Quyết định trung tâm bằng AI thật 100%:** Lời gọi LLM API thật tại [`codebase/ai.py`](codebase/ai.py) (Gemini 2.5 Flash / GPT-4o-mini) với JSON Schema bắt buộc; toàn bộ vết gọi AI thật được lưu tại [`eval/ai_traces.log`](eval/ai_traces.log).
+  > 3. **Phần Mock vs Phần Thật minh bạch:**
+  >    - *Phần Thật (100% Core Engine):* Bot Discord thật ([`app.py`](codebase/app.py)), AI Engine ([`ai.py`](codebase/ai.py)), CSDL SQLite ([`storage.py`](codebase/storage.py)), Nhắc hẹn tự động qua DM ([`reminders.py`](codebase/reminders.py)), Giao diện Rich Embed trên Discord ([`ui.py`](codebase/ui.py)).
+  >    - *Phần Mock:* Hoàn toàn KHÔNG có logic giả lập trong Discord Bot. File `codebase/index.html` chỉ là bản mô phỏng giao diện tĩnh (Companion Web Mockup) tạo từ mốc CP2 để phục vụ trình chiếu slide hoặc chạy demo dự phòng offline khi mất mạng.
 - **Automation:** [x] Conditional / Augment
   - *Lý do theo Cost-of-error:* Việc thông báo sai hạn nộp bài (deadline) hoặc sai phòng học gây hậu quả nghiêm trọng trực tiếp (học viên bị 0 điểm hoặc lỡ buổi học). Vì vậy giải pháp áp dụng **Conditional / Augment**: Con người luôn là người quyết định cuối cùng; AI chỉ trích xuất có bằng chứng và gắn cờ cảnh báo khi độ tin cậy thấp.
-- **§4b. Bảng 4 nguyên tắc HAX/PAIR áp dụng cụ thể trên `codebase/index.html`:**
+- **§4b. Bảng 4 nguyên tắc HAX/PAIR áp dụng cụ thể trên Bot Discord thật & Bản demo:**
 
-| Nguyên tắc | Mô tả nguyên tắc | Vị trí áp dụng cụ thể trên `codebase/index.html` |
+| Nguyên tắc | Mô tả nguyên tắc | Vị trí áp dụng cụ thể trên Bot Discord thật (`codebase/app.py`, `ui.py`) & Bản demo |
 |---|---|---|
-| **HAX G1 (Nêu rõ năng lực hệ thống)** | Giúp người dùng hiểu hệ thống có thể làm gì và không làm gì | 1. Dòng mô tả ngay dưới Header: *"Chuyên trích xuất Task, Deadline & Lịch đổi từ Discord"*. <br>2. Phản hồi của bot khi người dùng hỏi *"giải thích Transformer"*: Bot từ chối và hướng dẫn gặp VLearn Tutor. |
-| **HAX G2 (Thể hiện rõ độ tin cậy)** | Hiển thị mức độ chắc chắn của kết quả AI | 1. Huy hiệu màu sắc: 🔴 High (Khẩn cấp), 🟠 Medium (Quan trọng), 🟢 Low (Theo dõi).<br>2. Với tin nhắn mơ hồ hoặc thiếu căn cứ (như tin *"Tối mai làm nhé"* trên `index.html`), bot gắn nhãn **`🟡 Needs review`** cảnh báo: *"Không rõ đây là task hay chat thông thường. AI không đủ căn cứ để tự kết luận"*; trên Bot Discord thật (`ui.py` L80), bot hiển thị **`Confidence: < 0.80 ⚠️ (Mốc giờ/thông tin cần xác nhận lại)`**, đặt `deadline_iso: null` chứ tuyệt đối không tự bịa mốc giờ 23:59. |
-| **HAX G9 (Hỗ trợ sửa sai tức thì)** | Cho phép người dùng can thiệp và sửa đổi kết quả trực tiếp | 1. **Trên Bot Discord thật (`codebase/app.py` L422):** Lệnh slash command `/correct task_id [deadline_iso] [priority] [title]`, cập nhật trực tiếp vào database SQLite và tính lại reminder.<br>2. **Trên Prototype (`codebase/index.html`):** Nút **"✏️ Sửa task"** trên từng thẻ mở Modal chỉnh sửa deadline/priority và lưu cập nhật tức thì. |
-| **HAX G11 (Giải thích lý do & Dẫn nguồn)** | Giúp người dùng hiểu vì sao AI đưa ra kết quả | Trên mỗi thẻ công việc đều có ô dẫn nguồn màu xám đen trích nguyên văn câu nói của TA/Giảng viên và thời điểm gửi. |
+| **HAX G1 (Nêu rõ năng lực hệ thống)** | Giúp người dùng hiểu hệ thống có thể làm gì và không làm gì | 1. **Trên Bot Discord thật:** Lệnh slash command `/summary`: mô tả rõ ràng *"Tổng hợp tin nhắn 24h qua và trích xuất Task, Deadline, Lịch đổi"*. Khi user hỏi ngoài phạm vi (như giải bài tập), bot từ chối lịch sự và hướng dẫn gặp VLearn Tutor.<br>2. **Trên Companion UI (`index.html`):** Dòng mô tả chức năng ngay dưới Header. |
+| **HAX G2 (Thể hiện rõ độ tin cậy)** | Hiển thị mức độ chắc chắn của kết quả AI | 1. **Trên Bot Discord thật (`ui.py` L48-84):** Icon màu sắc trực quan (🔴 high, 🟠 medium, 🟢 low); hiển thị điểm `Confidence: 0.xx` (nếu < 0.80 thì kèm cờ cảnh báo `⚠️ Mốc giờ/thông tin cần xác nhận lại`, gán `deadline_iso: null` chứ tuyệt đối không tự bịa giờ 23:59).<br>2. **Trên Companion UI (`index.html`):** Thẻ màu vàng `🟡 Needs review` cảnh báo *"AI không đủ căn cứ để tự kết luận"*. |
+| **HAX G9 (Hỗ trợ sửa sai tức thì)** | Cho phép người dùng can thiệp và sửa đổi kết quả trực tiếp | 1. **Trên Bot Discord thật ([`app.py` L422](codebase/app.py#L422)):** Lệnh slash command `/correct task_id [deadline_iso] [priority] [title]`, ghi đè trực tiếp vào SQLite database và tự động tính lại lịch reminder.<br>2. **Trên Companion UI (`index.html`):** Nút **"✏️ Sửa task"** trên từng thẻ mở Modal chỉnh sửa live. |
+| **HAX G11 (Giải thích lý do & Dẫn nguồn)** | Giúp người dùng hiểu vì sao AI đưa ra kết quả | 1. **Trên Bot Discord thật ([`ui.py` L66-76](codebase/ui.py#L66-L76)):** Trên mỗi thẻ Embed đều trích dẫn kênh `#{source_channel}`, người gửi `{source_author}`, trích dẫn nguyên văn `> {snippet}` và link bấm trực tiếp mở tin nhắn Discord gốc `[Nguồn]({source_url})`.<br>2. **Trên Companion UI (`index.html`):** Nút "Xem message gốc" hiển thị câu nói của TA/Giảng viên. |
 
 ## §5. Kiểu lỗi — 4 lớp chỗ khó & kịch bản (8 kịch bản rủi ro theo chuẩn HAX Playbook)
 
 | STT | Lớp chỗ khó | Tình huống cụ thể (Input) | Nguy cơ lỗi | Hành vi mong muốn (Nói gì, Hiện gì, Cho user làm gì tiếp) | Nguyên tắc áp dụng (HAX/PAIR) |
 |---|---|---|---|---|---|
-| 1 | ① Nguồn sự thật | "Bài tập Lab 2 nộp vào tối nay nhé" | AI tự ý bịa mốc giờ 23:59 (Hallucination) | Trích xuất task nhưng đặt deadline_iso: null; trên prototype hiển thị nhãn 🟡 Needs review, trên bot hiển thị Confidence < 0.80 kèm cảnh báo cần xác nhận mốc giờ, không tự bịa giờ | **HAX G2** (Rõ độ tin cậy) & **HAX G11** (Dẫn nguồn) |
+| 1 | ① Nguồn sự thật | "Bài tập Lab 2 nộp vào tối nay nhé" | AI tự ý bịa mốc giờ 23:59 (Hallucination) | Trích xuất task nhưng đặt `deadline_iso: null`; trên Bot Discord thật hiển thị Confidence < 0.80 kèm cảnh báo cần xác nhận mốc giờ, không tự bịa giờ (trên companion UI hiển thị nhãn `🟡 Needs review`) | **HAX G2** (Rõ độ tin cậy) & **HAX G11** (Dẫn nguồn) |
 | 2 | ① Nguồn sự thật | Học viên A nhắn: "Chắc mai nộp lab đấy cả nhà" | AI nhặt tin đồn của học viên thành deadline thật | Lọc bỏ qua tin nhắn không thuộc người có thẩm quyền (GV/TA/BTC), không tạo thẻ công việc | **PAIR Explainability & Grounding** |
-| 3 | ② Mơ hồ / Thiếu tin | TA nhắn: "Tuần này nhớ nộp báo cáo tiến độ nhé" | AI đoán mò thứ hoặc bỏ sót việc | Gắn nhãn `[Chưa rõ ngày cụ thể]`, tự động xếp vào nhóm 🟢 P3 (Theo dõi), gợi ý hỏi lại TA | **HAX G2** & **PAIR Graceful Failure** |
-| 4 | ② Mơ hồ / Thiếu tin | GV nhắn: "Mai nộp spec nha cả lớp" | AI không có giờ nộp chính xác | Gắn nhãn `[Mai - Chưa rõ giờ]`, xếp vào 🟡 P2 (Quan trọng), hiển thị nút "Sửa hạn nộp" để cập nhật | **HAX G9** (Hỗ trợ sửa sai tức thì) |
-| 5 | ③ Ngoài thẩm quyền | User gõ: "Giải thích thuật toán Transformer cho tôi" | Bot trả lời lan man ngoài phạm vi hoặc sai kiến thức | Bot từ chối lịch sự: *"Mình là Trợ lý Action Digest chuyên lọc Task & Lịch. Để hỏi bài học, bạn hãy dùng VLearn Tutor nhé!"* | **HAX G1** (Rõ năng lực hệ thống) & **PAIR Mental Models** |
+| 3 | ② Mơ hồ / Thiếu tin | TA nhắn: "Tuần này nhớ nộp báo cáo tiến độ nhé" | AI đoán mò thứ hoặc bỏ sót việc | Gắn nhãn `[Chưa rõ ngày cụ thể]`, tự động xếp vào nhóm 🟢 Low (Theo dõi), gợi ý hỏi lại TA | **HAX G2** & **PAIR Graceful Failure** |
+| 4 | ② Mơ hồ / Thiếu tin | GV nhắn: "Mai nộp spec nha cả lớp" | AI không có giờ nộp chính xác | Gắn nhãn `[Mai - Chưa rõ giờ]`, xếp vào 🟠 Medium (Quan trọng), cho phép dùng `/correct` trên Discord (hoặc nút "Sửa task" trên companion UI) để cập nhật | **HAX G9** (Hỗ trợ sửa sai tức thì) |
+| 5 | ③ Ngoài thẩm quyền | User gõ: "Giải thích thuật toán Transformer cho tôi" | Bot trả lời lan man ngoài phạm vi hoặc sai kiến thức | Bot từ chối lịch sự: *"Mình là Trợ lý Action Digest chuyên trích xuất Task & Lịch. Để hỏi bài học, bạn vui lòng sử dụng VLearn Tutor nhé!"* | **HAX G1** (Rõ năng lực hệ thống) & **PAIR Mental Models** |
 | 6 | ③ Ngoài thẩm quyền | User gõ: "Hôm nay mình được điểm danh chưa bot?" | Bot suy đoán bừa hoặc lộ dữ liệu điểm danh | Bot phản hồi không có quyền truy cập DB điểm danh, hướng dẫn liên hệ trực tiếp TA trực phòng | **HAX G1** & **PAIR User Control** |
-| 7 | ④ Đặc thù domain | Tin 1: "Học tại E402". Tin 2 (14:00): "Đổi sang E403" | Học viên đến nhầm phòng cũ E402 | So sánh timestamp, nhận diện từ khóa 'đổi/chuyển', ghi đè phòng mới E403 và nâng lên 🔴 P1 Khẩn cấp | **HAX G2** & **Domain Taxonomy** |
+| 7 | ④ Đặc thù domain | Tin 1: "Học tại E402". Tin 2 (14:00): "Đổi sang E403" | Học viên đến nhầm phòng cũ E402 | So sánh timestamp, nhận diện từ khóa 'đổi/chuyển', ghi đè phòng mới E403 và nâng lên 🔴 High Khẩn cấp | **HAX G2** & **Domain Taxonomy** |
 | 8 | ④ Đặc thù domain | "Hạn chốt CP1 lúc 19:30 và CP2 lúc 21:00 tối nay" | Bỏ sót 1 trong 2 deadline gộp trong 1 tin | Bóc tách thành 2 thẻ công việc độc lập (CP1: 19:30, CP2: 21:00) trên bản tin Action Digest | **PAIR Data Structuring** |
 
-## §6. Bốn đường đi của trải nghiệm (Thao tác trên Discord Bot thật và bản mô phỏng `index.html`)
+## §6. Bốn đường đi của trải nghiệm (Thao tác trên Bot Discord thật — kèm bản mô phỏng phụ trợ)
 - **Đường 1 — Thuận lợi khi AI tự tin cao (Happy path):**
-  - *Thao tác:* Người dùng gõ lệnh slash command `/summary all` (hoặc `/summary` tick chọn các kênh cần quét) trên Discord, hoặc bấm nút gợi ý 1 trên `index.html`.
-  - *Xử lý & Kết quả:* Bot hiển thị thông báo đang quét tin nhắn trong 24 giờ qua, AI lọc nhiễu và trả về Bản tin Action Digest Embed với các thẻ việc chia theo 🔴 P1 Khẩn cấp, 🟡 P2 Quan trọng, 🟢 P3 Theo dõi kèm trích dẫn câu gốc và nút đánh dấu hoàn thành.
+  - *Thao tác:* Học viên gõ lệnh slash command `/summary all` (hoặc `/summary` tick chọn các kênh cần quét) trên Discord.
+  - *Xử lý & Kết quả:* Bot hiển thị thông báo đang quét tin nhắn 24h qua (`app.py: collect_messages`), gọi AI phân tích (`ai.py: analyze_messages`), lưu task vào SQLite (`storage.py: save_summary_run`), hiển thị Bản tin Action Digest Embed (`ui.py: build_summary_embed`) với các thẻ việc chia theo 🔴 High, 🟠 Medium, 🟢 Low kèm trích dẫn nguyên văn câu gốc, link nhảy trực tiếp đến tin nhắn Discord gốc `[Nguồn]({source_url})` và tự động lên lịch DM nhắc nhở (`reminders.py`).
 - **Đường 2 — Xử lý khi AI thiếu tự tin (Low-confidence path — ②):**
-  - *Thao tác:* Người dùng gõ lệnh `/summary` quét kênh có tin nhắn mơ hồ (ví dụ: tin *"Tối mai làm nhé"* trong `#team-magician` hoặc thông báo chỉ ghi *"nộp vào tối nay"* không rõ giờ).
-  - *Xử lý & Kết quả:* AI phát hiện độ tin cậy thấp (`confidence = 0.70 < 0.80`), không tự ý gán giờ mặc định 23:59. Trên prototype `index.html`, bot hiển thị thẻ màu vàng **`🟡 Needs review`** cảnh báo: *"Không rõ đây là task hay chat thông thường. AI không đủ căn cứ để tự kết luận"*. Trên bot Discord thật (`ui.py` L80), bot hiển thị: *"Confidence: 0.70 ⚠️ (Mốc giờ/thông tin cần xác nhận lại)"* và trích dẫn câu gốc để người dùng tự xác nhận hoặc dùng `/correct` để bổ sung (HAX G2).
+  - *Thao tác:* Học viên gõ lệnh `/summary` quét kênh có tin nhắn mơ hồ (ví dụ: thông báo chỉ ghi *"nộp vào tối nay"* không rõ giờ hoặc chat *"Tối mai làm nhé"*).
+  - *Xử lý & Kết quả:* AI phát hiện độ tin cậy thấp (`confidence = 0.70 < 0.80`), gán `deadline_iso: null` và không tự ý gán giờ mặc định 23:59. Trên Bot Discord thật (`ui.py` L80), bot hiển thị: *"Confidence: 0.70 ⚠️ (Mốc giờ/thông tin cần xác nhận lại)"* và trích dẫn câu gốc để học viên dùng `/correct` bổ sung giờ chính xác (HAX G2). (Trên companion UI `index.html`, bot hiển thị thẻ màu vàng `🟡 Needs review`).
 - **Đường 3 — Xử lý khi không tìm thấy căn cứ (Failure / Zero Grounding — ①):**
-  - *Thao tác:* Người dùng gõ `/summary` trên kênh `#thao-luan-chung` chỉ toàn tin nhắn rủ đi ăn trưa và tán gẫu.
+  - *Thao tác:* Học viên gõ `/summary` trên kênh `#thao-luan-chung` chỉ toàn tin nhắn rủ đi ăn trưa và tán gẫu.
   - *Xử lý & Kết quả:* Bot phản hồi an toàn: *"Không phát hiện task, deadline hoặc lịch thay đổi nào trong 24 giờ qua từ các kênh đã chọn"*, tuyệt đối không bịa đặt task giả định (Zero Hallucination).
 - **Đường 4 — Cơ chế người dùng can thiệp sửa đổi kết quả trực tiếp (Correction path — HAX G9):**
-  - *Thao tác:* Trên bot Discord thật: học viên gõ lệnh `/correct task_id [deadline_iso] [priority] [title]`; trên bản mô phỏng `index.html`: học viên bấm nút *"✏️ Sửa task"*.
-  - *Xử lý & Kết quả:* Modal hiển thị cho phép điều chỉnh tiêu đề task, deadline và mức ưu tiên $\to$ Bấm *"Lưu Thay Đổi"* $\to$ Thẻ được cập nhật tức thì trên giao diện và lưu vào SQLite database, tự động tính lại lịch hẹn nhắc nhở.
+  - *Thao tác trên Bot Discord thật:* Học viên gõ lệnh `/correct task_id: 1 deadline_iso: 2026-09-17T21:00:00+07:00 priority: high title: Nộp bài Lab 2`.
+  - *Xử lý & Kết quả trên Discord:* Bot gọi `store.set_correction()` ghi đè thông tin trực tiếp vào SQLite database, đặt lại cờ `reminder_sent = 0` để tiến trình ngầm `reminders.py` tự động tính toán lại lịch bắn DM nhắc nhở, và phản hồi ephemeral message xác nhận cập nhật thành công. (Trên companion UI `index.html`, học viên bấm nút *"✏️ Sửa task"* trên thẻ để chỉnh sửa tương tự).
 - **Khi bị đòi hỏi ngoài phạm vi (Out-of-scope — ③):**
-  - *Thao tác:* Người dùng bấm nút gợi ý 4: *"giải thích thuật toán Transformer cho tôi"* hoặc hỏi *"tôi đã được điểm danh chưa?"*.
+  - *Thao tác:* Học viên gõ hỏi: *"giải thích thuật toán Transformer cho tôi"* hoặc *"hôm nay mình được điểm danh chưa bot?"*.
   - *Xử lý & Kết quả:* Bot nhận diện câu hỏi ngoài phạm vi, từ chối lịch sự: *"Mình là Trợ lý Action Digest chuyên trích xuất Task, Deadline & Lịch đổi từ Discord. Để hỏi bài học, bạn vui lòng liên hệ VLearn Tutor hoặc TA nhé!"* (HAX G1).
 - **Case đặc thù domain lớp học (Domain Specific — ④):**
   - *Thao tác:* Giảng viên/TA đăng tin lúc 08:00 thông báo học phòng E402, sau đó 14:00 đăng tin đính chính chuyển sang E403.
-  - *Xử lý & Kết quả:* AI so khớp timestamp và cú pháp đính chính, tự động cập nhật phòng học mới E403, ghi chú `(Đổi từ phòng cũ E402)` và đẩy thẻ lên mức 🔴 P1 Khẩn cấp để tránh học viên đi nhầm phòng.
+  - *Xử lý & Kết quả:* AI so khớp timestamp và cú pháp đính chính, tự động cập nhật phòng học mới E403, ghi chú `(Đổi từ phòng cũ E402)` và đẩy thẻ lên mức 🔴 High để tránh học viên đi nhầm phòng.
 
 ## §7. Kiểm thử & Khóa ngưỡng chất lượng (Quality Bar)
 
@@ -263,7 +265,8 @@ Theo nguyên tắc minh bạch khoa học của sự kiện (*"Tự khai báo kh
 |---|---|---|
 | 16/9 - 19:00 | Khởi tạo Canvas & Spec CP1 | Chốt ý tưởng Action Digest & Canvas 4 ô |
 | 16/9 - 19:35 | Cập nhật Canvas theo slide chữa bài | Gọt 4 ô theo chuẩn Pain · Bằng chứng · Impact · Lát cắt |
-| 16/9 - 20:20 | Hoàn thiện CP2 khớp 100% với `index.html` | Cập nhật luồng chat bot tương tác, 4 kịch bản bấm thử, HAX G1/G2/G9/G11 |
+| 16/9 - 20:20 | Hoàn thiện CP2 với Companion Web Mockup | Xây dựng wireframe tương tác `codebase/index.html` mô phỏng 4 kịch bản bấm thử, kiểm chứng HAX G1/G2/G9/G11 |
 | 17/9 - 10:30 | Xây dựng Golden Set 22 case & chạy Eval | Đo lường định lượng cho CP3 & khoá Quality Bar theo form hướng dẫn |
 | 17/9 - 14:50 | Hoàn thiện toàn diện AI Spec & Đóng băng Quality Bar (CP4) | Bổ sung phân tích sản phẩm tương tự thứ 2 (§3), chuẩn hóa công thức Quality Bar định lượng (§7), tự khai báo 3 hạn chế thực tế và ma trận phân công chi tiết kèm kế hoạch kiểm thử CP5 (§8) |
+| 17/9 - 15:40 | Chuẩn hóa Working Prototype cho Tiêu chí R5 (8 điểm) | Khẳng định Working Prototype chính thức là Bot Discord thật (`codebase/app.py`), làm rõ phần Thật (Discord bot + LLM + SQLite + DM reminder) vs phần Mock (`index.html` companion UI) |
 
