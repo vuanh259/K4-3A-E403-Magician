@@ -245,7 +245,8 @@ async def run_summary(
     for i, it in enumerate(items, 1):
         prio = str(it.get("priority", "medium")).upper()
         dl = it.get("deadline_iso") or "Không có"
-        ch = it.get("source_channel") or "unknown"
+        src_msg = msg_map.get(str(it.get("source_message_id")))
+        ch = getattr(getattr(src_msg, "channel", None), "name", "unknown")
         print(f"   {i}. [{prio}] {it.get('title')} | Hạn: {dl} | Nguồn: #{ch}")
 
     task_ids = await store.upsert_items(
