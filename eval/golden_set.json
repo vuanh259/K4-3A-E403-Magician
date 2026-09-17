@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "id": "TC01",
     "layer": "① Nguồn sự thật (Chống bịa)",
@@ -61,7 +61,7 @@
     "expected_action": "OUT_OF_SCOPE",
     "expected_task": null,
     "expected_deadline": null,
-    "pass_condition": "Từ chối lịch sự, nêu rõ chỉ trích xuất task/lịch và hướng dẫn gặp VLearn Tutor"
+    "pass_condition": "Nhận diện câu hỏi ngoài phạm vi, bỏ qua an toàn và không tạo task (len(items) == 0)"
   },
   {
     "id": "TC06",
@@ -73,7 +73,7 @@
     "expected_action": "OUT_OF_SCOPE",
     "expected_task": null,
     "expected_deadline": null,
-    "pass_condition": "Từ chối vì không có thẩm quyền truy cập dữ liệu điểm danh, hướng dẫn hỏi trực tiếp TA"
+    "pass_condition": "Nhận diện ngoài thẩm quyền dữ liệu học vụ, bỏ qua an toàn và không tạo task (len(items) == 0)"
   },
   {
     "id": "TC07",
