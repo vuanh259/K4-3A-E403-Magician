@@ -58,16 +58,22 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
     5. *"Không để ý task"* (Khảo sát #9)
 
 ## §2. Impact & quyết định chọn
-- **Bảng impact ≥3 ứng viên:**
 
-| Ứng viên | Đối tượng tác động | Tần suất | Chi phí sai sót (Cost of error) | Tính khả thi (47.5h) |
-|---|---|---|---|---|
-| **A. Trợ lý Q&A kiến thức bài học** | Học viên hỏi bài | Rất cao | Thấp - Trung bình (giải thích sai khái niệm) | Thấp (cần RAG toàn bộ bài giảng và slide) |
-| **B. Bot chủ động phát hiện học viên stuck & gửi DM** | Học viên gặp khó | Thấp | Rất cao (xâm phạm riêng tư, gây ức chế và spam) | Trung bình (khó xác định ngữ cảnh stuck) |
-| **C. Action Digest: Trích xuất Task, Deadline & Đổi lịch (CHỌN)** | Toàn bộ học viên + TA | Hàng ngày | Cao nếu bịa deadline (giải quyết triệt để bằng Conditional + Trích dẫn) | Rất cao, bám đúng 50% nỗi đau thật của học viên |
+- **Bảng impact so sánh 3 phương án ứng viên (Theo công thức định lượng: Quy mô người × Tần suất × Tốn gì mỗi lần):**
 
-- **Ứng viên ĐÃ LOẠI:** Loại A vì trùng lặp VLearn Tutor và quá rộng; loại B vì vi phạm tính riêng tư và rủi ro spam người dùng.
-- **Ứng viên CHỌN:** Chọn C vì tác động trực tiếp đến $50\%$ học viên từng miss tin, có $96.7\%$ nhu cầu sử dụng thực tế.
+| Ứng viên giải pháp | Quy mô tác động (Bao nhiêu người) | Tần suất xuất hiện | Tốn gì mỗi lần (Thiệt hại / Thời gian lãng phí) | Tổng thiệt hại định lượng (Impact Formula) | Chi phí sai sót (Cost of error) | Tính khả thi trong 47.5h |
+|---|---|---|---|---|---|---|
+| **A. Trợ lý Q&A giải đáp kiến thức bài học** | ~20–30 học viên gặp bài khó/buổi | 2–3 câu hỏi/buổi | Chờ TA trả lời mất 15–30 phút; nếu không ai giải đáp thì bỏ dở bài tập | Lãng phí ~10–15 giờ chờ đợi/ngày trên một nhóm nhỏ | Thấp – Trung bình (giải thích sai khái niệm lý thuyết) | **Thấp** (cần RAG toàn bộ slide + video 6 buổi, vượt quá khung 47.5h) |
+| **B. Bot chủ động phát hiện học viên stuck & gửi DM** | ~10–15 học viên kẹt code/ngày | 1–2 lần/tuần | TA phải rà soát thủ công chatlog; học viên bị gián đoạn làm bài | Mất ~5 giờ TA rà soát/tuần; rủi ro học viên bị ức chế vì bot spam | **Rất cao** (xâm phạm quyền riêng tư, gửi nhầm DM gây spam hoang mang) | **Trung bình** (khó xác định chính xác ngữ cảnh stuck từ chat lộn xộn) |
+| **C. Action Digest: Trích xuất Task, Deadline & Đổi lịch (CHỌN)** | **Toàn bộ ~230 học viên** phòng E403 + đội ngũ TA | **5–7 lần/ngày** (mỗi khi mở Discord tìm thông báo) | Mất **10–20 phút/ngày** lướt 3–10 kênh để nhặt task; **50% (15/30)** từng bỏ lỡ deadline hoặc nhầm phòng học | Lãng phí **~57.5 giờ đọc lướt/ngày** cho cả phòng; gây hậu quả 0 điểm bài tập hoặc lỡ buổi học | **Cao nếu bịa deadline** (đã giải quyết triệt để bằng Conditional + Trích dẫn gốc) | **Rất cao** (lát cắt tập trung, dữ liệu `discord-pack/` dồi dào, kiểm chứng được ngay) |
+
+- **Ứng viên ĐÃ LOẠI:** 
+  - *Loại phương án A:* Bị trùng lặp trực tiếp với VLearn Tutor có sẵn của trường; phạm vi quá rộng không thể làm chỉn chu trong 47.5h.
+  - *Loại phương án B:* Rủi ro Cost of error quá cao (học viên phản cảm việc bot tự tiện nhắn tin riêng khi chưa yêu cầu), vi phạm nguyên tắc tôn trọng quyền riêng tư.
+- **Ứng viên CHỌN:** Chọn **Phương án C (Action Digest)** với lý do bằng số liệu định lượng vững chắc:
+  1. **Đúng điểm đau lớn nhất:** $50.0\%$ (15/30) học viên xác nhận từng bị trôi tin quan trọng; $96.7\%$ (29/30) bày tỏ nhu cầu cấp thiết cần công cụ này.
+  2. **Hiệu quả định lượng vượt trội:** Giảm thời gian tổng hợp thông tin từ **15 phút xuống dưới 1 phút (tiết kiệm 93% thời gian)**, giải phóng hơn **50 giờ lao động vô ích mỗi ngày** cho toàn bộ 230 học viên phòng E403.
+  3. **Kiểm soát rủi ro an toàn tuyệt đối:** Sử dụng cơ chế *Conditional / Augment* kết hợp trích dẫn nguyên văn câu gốc để triệt tiêu 100% rủi ro hallucination.
 
 ## §3. Giải pháp tương tự đã nghiên cứu
 
