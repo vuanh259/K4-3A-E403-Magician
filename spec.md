@@ -125,7 +125,7 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 |---|---|---|
 | **HAX G1 (Nêu rõ năng lực hệ thống)** | Giúp người dùng hiểu hệ thống có thể làm gì và không làm gì | 1. Dòng mô tả ngay dưới Header: *"Chuyên trích xuất Task, Deadline & Lịch đổi từ Discord"*. <br>2. Phản hồi của bot khi người dùng hỏi *"giải thích Transformer"*: Bot từ chối và hướng dẫn gặp VLearn Tutor. |
 | **HAX G2 (Thể hiện rõ độ tin cậy)** | Hiển thị mức độ chắc chắn của kết quả AI | 1. Huy hiệu màu sắc: 🔴 P1 Khẩn cấp, 🟡 P2 Quan trọng, 🟢 P3 Theo dõi.<br>2. Khi hỏi *"khi nào nộp lab 2?"*, bot hiển thị nhãn cảnh báo màu vàng: `[⚠️ Mốc giờ chưa cụ thể]` và ghi rõ *"AI không tự bịa giờ 23:59"*. |
-| **HAX G9 (Hỗ trợ sửa sai tức thì)** | Cho phép người dùng can thiệp và sửa đổi kết quả trực tiếp | Nút **"Sửa hạn nộp"** trực tiếp trên từng thẻ công việc, bấm vào sẽ mở Modal cho phép học viên sửa lại tên task, deadline, mức ưu tiên và bấm *"Lưu thay đổi"*. |
+| **HAX G9 (Hỗ trợ sửa sai tức thì)** | Cho phép người dùng can thiệp và sửa đổi kết quả trực tiếp | 1. **Trên Bot Discord thật (`codebase/app.py` L422):** Lệnh slash command `/correct task_id [deadline_iso] [priority] [title]`, cập nhật trực tiếp vào database SQLite và tính lại reminder.<br>2. **Trên Prototype (`codebase/index.html`):** Nút **"✏️ Sửa task"** trên từng thẻ mở Modal chỉnh sửa deadline/priority và lưu cập nhật tức thì. |
 | **HAX G11 (Giải thích lý do & Dẫn nguồn)** | Giúp người dùng hiểu vì sao AI đưa ra kết quả | Trên mỗi thẻ công việc đều có ô dẫn nguồn màu xám đen trích nguyên văn câu nói của TA/Giảng viên và thời điểm gửi. |
 
 ## §5. Kiểu lỗi — 4 lớp chỗ khó & kịch bản (8 kịch bản rủi ro theo chuẩn HAX Playbook)
@@ -152,8 +152,8 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
   - *Thao tác:* Người dùng gõ `/summary` trên kênh `#thao-luan-chung` chỉ toàn tin nhắn rủ đi ăn trưa và tán gẫu.
   - *Xử lý & Kết quả:* Bot phản hồi an toàn: *"Không phát hiện task, deadline hoặc lịch thay đổi nào trong 24 giờ qua từ các kênh đã chọn"*, tuyệt đối không bịa đặt task giả định (Zero Hallucination).
 - **Đường 4 — Cơ chế người dùng can thiệp sửa đổi kết quả trực tiếp (Correction path — HAX G9):**
-  - *Thao tác:* Người dùng bấm nút *"Sửa hạn nộp"* trên bất kỳ thẻ công việc nào trong bản tin Action Digest.
-  - *Xử lý & Kết quả:* Modal hiển thị cho phép học viên điều chỉnh lại tiêu đề task, mốc deadline và mức ưu tiên $\to$ Bấm *"Lưu Thay Đổi"* $\to$ Thẻ được cập nhật tức thì và hệ thống ghi nhận vào `validation/corrections.log`.
+  - *Thao tác:* Trên bot Discord thật: học viên gõ lệnh `/correct task_id [deadline_iso] [priority] [title]`; trên bản mô phỏng `index.html`: học viên bấm nút *"✏️ Sửa task"*.
+  - *Xử lý & Kết quả:* Modal hiển thị cho phép điều chỉnh tiêu đề task, deadline và mức ưu tiên $\to$ Bấm *"Lưu Thay Đổi"* $\to$ Thẻ được cập nhật tức thì trên giao diện và lưu vào SQLite database, tự động tính lại lịch hẹn nhắc nhở.
 - **Khi bị đòi hỏi ngoài phạm vi (Out-of-scope — ③):**
   - *Thao tác:* Người dùng bấm nút gợi ý 4: *"giải thích thuật toán Transformer cho tôi"* hoặc hỏi *"tôi đã được điểm danh chưa?"*.
   - *Xử lý & Kết quả:* Bot nhận diện câu hỏi ngoài phạm vi, từ chối lịch sự: *"Mình là Trợ lý Action Digest chuyên trích xuất Task, Deadline & Lịch đổi từ Discord. Để hỏi bài học, bạn vui lòng liên hệ VLearn Tutor hoặc TA nhé!"* (HAX G1).
@@ -243,7 +243,7 @@ Theo nguyên tắc minh bạch khoa học của sự kiện (*"Tự khai báo kh
 - **Kịch bản kiểm thử (Test Protocol):**
   1. *Bước 1 (Trải nghiệm thực tế):* Học viên truy cập server Discord lớp học, gõ lệnh `/summary all` hoặc chọn 3 kênh theo dõi chính.
   2. *Bước 2 (Kiểm chứng kết quả):* Đánh giá độ chính xác của bản tin Action Digest: task có đúng không, deadline có bịa không, trích dẫn gốc có mở đúng tin nhắn không.
-  3. *Bước 3 (Can thiệp sửa đổi - HAX G9):* Bấm nút *"Sửa hạn nộp"* trên thẻ công việc để chỉnh sửa thời gian và lưu lại vào database.
+  3. *Bước 3 (Can thiệp sửa đổi - HAX G9):* Bấm nút *"✏️ Sửa task"* (hoặc gõ lệnh `/correct task_id`) để chỉnh sửa thời gian/độ ưu tiên và lưu lại vào database.
   4. *Bước 4 (Nhận nhắc nhở tự động):* Nhận tin nhắn DM nhắc nhở tự động trước deadline 15 phút.
 - **Tiêu chí nghiệm thu (Acceptance Criteria):**
   - Thời gian học viên nắm bắt toàn bộ việc cần làm trong ngày giảm từ 5–10 phút xuống còn 2–3 phút.
