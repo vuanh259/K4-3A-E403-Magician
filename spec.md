@@ -9,7 +9,7 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 ### 🟩 Ô 1: Người dùng & Nỗi đau
 - **Job executor:** Học viên khóa học AI và TA quản lý kênh Discord hàng ngày.
 - **Quy trình hiện tại:** Học viên phải theo dõi từ 3 đến 10 channel Discord mỗi ngày để tìm kiếm thông báo bài tập, lịch học, lịch nộp lab.
-- **Nỗi đau cốt lõi (Core Pain - KHÔNG chữ AI):** Kênh Discord có lượng tin nhắn thảo luận quá lớn khiến học viên mất 10–20 phút mỗi ngày đọc lướt và 50% từng bỏ lỡ hạn nộp bài tập hoặc nhầm phòng học do thông báo bị trôi.
+- **Nỗi đau cốt lõi (Core Pain - KHÔNG chữ AI):** Kênh Discord có lượng tin nhắn thảo luận quá lớn khiến học viên mất 5–10 phút mỗi ngày đọc lướt và 50% từng bỏ lỡ hạn nộp bài tập hoặc nhầm phòng học do thông báo bị trôi.
 
 ### 🟦 Ô 2: Bằng chứng ban đầu
 - **Khảo sát thực tế (Đạt Chuẩn A với $n = 30$ học viên ngoài nhóm):**
@@ -46,7 +46,7 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 ## §1. User & Job
 - **Job executor + workflow:** Học viên khóa học AI và TA phụ trách kênh Discord. Mỗi ngày học viên mở Discord 5-7 lần, lướt qua các kênh `#thông-báo`, `#general`, `#q-and-a` để tìm bài tập và lịch học, tự ghi chép lại hoặc chụp màn hình.
 - **Core JTBD:** Nắm bắt kịp thời, đầy đủ và chính xác các đầu việc cần làm cùng thời hạn nộp bài mà không phải đọc thủ công hàng trăm tin nhắn thảo luận.
-- **Problem statement (KHÔNG chữ AI):** Kênh Discord có lượng tin nhắn thảo luận quá lớn khiến học viên mất 10–20 phút mỗi ngày đọc lướt và 50% từng bỏ lỡ hạn nộp bài tập hoặc nhầm phòng học do thông báo bị trôi.
+- **Problem statement (KHÔNG chữ AI):** Kênh Discord có lượng tin nhắn thảo luận quá lớn khiến học viên mất 5–10 phút mỗi ngày đọc lướt và 50% từng bỏ lỡ hạn nộp bài tập hoặc nhầm phòng học do thông báo bị trôi.
 - **Evidence (Chuẩn A và B — log đầy đủ tại `evidence_log.md`):**
   - **Số liệu khảo sát (Chuẩn A):** $n = 30$ học viên ngoài nhóm, $50.0\%$ (15/30) xác nhận từng bỏ lỡ thông tin quan trọng; $96.7\%$ (29/30) mong muốn công cụ hỗ trợ.
   - **Khai thác dữ liệu (Chuẩn B):** Mining tập `discord-pack/` gồm 1.092 tin nhắn (779 tin từ học viên, 313 tin từ bot/BTC), chỉ ra 4 bản tin bot hiện có bị lỗi cắt cụt và thiếu trích xuất task.
@@ -65,14 +65,14 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 |---|---|---|---|---|---|---|
 | **A. Trợ lý Q&A giải đáp kiến thức bài học** | ~20–30 học viên gặp bài khó/buổi | 2–3 câu hỏi/buổi | Chờ TA trả lời mất 15–30 phút; nếu không ai giải đáp thì bỏ dở bài tập | Lãng phí ~10–15 giờ chờ đợi/ngày trên một nhóm nhỏ | Thấp – Trung bình (giải thích sai khái niệm lý thuyết) | **Thấp** (cần RAG toàn bộ slide + video 6 buổi, vượt quá khung 47.5h) |
 | **B. Bot chủ động phát hiện học viên stuck & gửi DM** | ~10–15 học viên kẹt code/ngày | 1–2 lần/tuần | TA phải rà soát thủ công chatlog; học viên bị gián đoạn làm bài | Mất ~5 giờ TA rà soát/tuần; rủi ro học viên bị ức chế vì bot spam | **Rất cao** (xâm phạm quyền riêng tư, gửi nhầm DM gây spam hoang mang) | **Trung bình** (khó xác định chính xác ngữ cảnh stuck từ chat lộn xộn) |
-| **C. Action Digest: Trích xuất Task, Deadline & Đổi lịch (CHỌN)** | **Toàn bộ ~230 học viên** phòng E403 + đội ngũ TA | **5–7 lần/ngày** (mỗi khi mở Discord tìm thông báo) | Mất **10–20 phút/ngày** lướt 3–10 kênh để nhặt task; **50% (15/30)** từng bỏ lỡ deadline hoặc nhầm phòng học | Lãng phí **~57.5 giờ đọc lướt/ngày** cho cả phòng; gây hậu quả 0 điểm bài tập hoặc lỡ buổi học | **Cao nếu bịa deadline** (đã giải quyết triệt để bằng Conditional + Trích dẫn gốc) | **Rất cao** (lát cắt tập trung, dữ liệu `discord-pack/` dồi dào, kiểm chứng được ngay) |
+| **C. Action Digest: Trích xuất Task, Deadline & Đổi lịch (CHỌN)** | **Toàn bộ ~230 học viên** phòng E403 + đội ngũ TA | **5–7 lần/ngày** (mỗi khi mở Discord tìm thông báo) | Mất **5–10 phút/ngày** lướt 3–10 kênh để nhặt task; **50% (15/30)** từng bỏ lỡ deadline hoặc nhầm phòng học | Lãng phí **~20–38 giờ đọc lướt/ngày** cho cả phòng (trung bình 5–10 phút × 230 người); gây hậu quả 0 điểm bài tập hoặc lỡ buổi học | **Cao nếu bịa deadline** (đã giải quyết triệt để bằng Conditional + Trích dẫn gốc) | **Rất cao** (lát cắt tập trung, dữ liệu `discord-pack/` dồi dào, kiểm chứng được ngay) |
 
 - **Ứng viên ĐÃ LOẠI:** 
   - *Loại phương án A:* Bị trùng lặp trực tiếp với VLearn Tutor có sẵn của trường; phạm vi quá rộng không thể làm chỉn chu trong 47.5h.
   - *Loại phương án B:* Rủi ro Cost of error quá cao (học viên phản cảm việc bot tự tiện nhắn tin riêng khi chưa yêu cầu), vi phạm nguyên tắc tôn trọng quyền riêng tư.
 - **Ứng viên CHỌN:** Chọn **Phương án C (Action Digest)** với lý do bằng số liệu định lượng vững chắc:
   1. **Đúng điểm đau lớn nhất:** $50.0\%$ (15/30) học viên xác nhận từng bị trôi tin quan trọng; $96.7\%$ (29/30) bày tỏ nhu cầu cấp thiết cần công cụ này.
-  2. **Hiệu quả định lượng vượt trội:** Giảm thời gian tổng hợp thông tin từ **15 phút xuống dưới 1 phút (tiết kiệm 93% thời gian)**, giải phóng hơn **50 giờ lao động vô ích mỗi ngày** cho toàn bộ 230 học viên phòng E403.
+  2. **Hiệu quả định lượng vượt trội:** Giảm thời gian tổng hợp thông tin từ **5–10 phút xuống còn 2–3 phút (tiết kiệm ~60–70% thời gian)**, giải phóng hơn **15–25 giờ lao động vô ích mỗi ngày** cho toàn bộ 230 học viên phòng E403.
   3. **Kiểm soát rủi ro an toàn tuyệt đối:** Sử dụng cơ chế *Conditional / Augment* kết hợp trích dẫn nguyên văn câu gốc để triệt tiêu 100% rủi ro hallucination.
 
 ## §3. Giải pháp tương tự đã nghiên cứu
@@ -213,7 +213,7 @@ Theo nguyên tắc minh bạch khoa học của sự kiện (*"Tự khai báo kh
   3. *Bước 3 (Can thiệp sửa đổi - HAX G9):* Bấm nút *"Sửa hạn nộp"* trên thẻ công việc để chỉnh sửa thời gian và lưu lại vào database.
   4. *Bước 4 (Nhận nhắc nhở tự động):* Nhận tin nhắn DM nhắc nhở tự động trước deadline 15 phút.
 - **Tiêu chí nghiệm thu (Acceptance Criteria):**
-  - Thời gian học viên nắm bắt toàn bộ việc cần làm trong ngày giảm từ 15-20 phút xuống dưới 1 phút.
+  - Thời gian học viên nắm bắt toàn bộ việc cần làm trong ngày giảm từ 5–10 phút xuống còn 2–3 phút.
   - Điểm mức độ hài lòng và sẵn sàng sử dụng (CSAT) $\ge 4.5/5.0$.
   - 100% học viên xác nhận bot không bịa đặt deadline ảo.
 
