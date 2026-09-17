@@ -284,9 +284,8 @@ Theo nguyên tắc minh bạch khoa học của sự kiện (*"Số xấu vẫn 
 ## §9. Changelog
 
 | Thời điểm | Đổi gì | Vì sao |
-|---|---|---|
-
-| 18/9 - CP5 | Xóa chức năng `/correct` | Do nhóm người dùng thử cảm thấy khó dùng và nhiều thao tác rườm rà cũng như tính ứng dụng không cao.  |
-| 18/9 - CP5 | Làm rõ vai trò của `/summary`, `/tasks` và link `Nguồn` | `/summary` dùng để xem thông tin quan trọng trong 24 giờ, `/tasks` để xem việc chưa hoàn thành, `/done` để đóng task; link `Nguồn` chỉ dùng khi cần kiểm chứng chứ không bắt buộc mở cho mọi item. |
-| 18/9 - CP5 | Giữ cơ chế cảnh báo cho thông tin mơ hồ thay vì tự suy diễn deadline | Với message như “nộp tối nay”, hệ thống để `deadline_iso = null` và hiển thị `Confidence: 0.70 ⚠️`, tránh tự bịa thời gian không có căn cứ. |
+|---|---|---|  
+| 18/9 - CP5 | Xóa chức năng `/correct` | Do nhóm người dùng thử cảm thấy khó dùng và nhiều thao tác rườm rà cũng như tính ứng dụng không cao.|  
+| 18/9 - CP5 | Làm rõ vai trò của `/summary`, `/tasks` và link `Nguồn` | `/summary` dùng để xem thông tin quan trọng trong 24 giờ, `/tasks` để xem việc chưa hoàn thành, `/done` để đóng task; link `Nguồn` chỉ dùng khi cần kiểm chứng chứ không bắt buộc mở cho mọi item. |  
+| 18/9 - CP5 | Giữ cơ chế cảnh báo cho thông tin mơ hồ thay vì tự suy diễn deadline | Với message như “nộp tối nay”, hệ thống để `deadline_iso = null` và hiển thị `Confidence: 0.70 ⚠️`, tránh tự bịa thời gian không có căn cứ. |  
 
