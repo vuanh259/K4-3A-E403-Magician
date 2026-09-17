@@ -4,10 +4,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def _parse_guild_id() -> int:
+    val = (os.getenv("DISCORD_GUILD_ID") or "").strip()
+    try:
+        return int(val) if val else 0
+    except (ValueError, TypeError):
+        return 0
+
 @dataclass(frozen=True)
 class Settings:
-    discord_bot_token: str = os.getenv("DISCORD_BOT_TOKEN", "")
-    discord_guild_id: int = int(os.getenv("DISCORD_GUILD_ID", "0") or 0)
+    discord_bot_token: str = (os.getenv("DISCORD_BOT_TOKEN") or "").strip()
+    discord_guild_id: int = _parse_guild_id()
 
     ai_base_url: str = os.getenv("AI_BASE_URL", "https://openrouter.ai/api/v1")
     ai_api_key: str = os.getenv("AI_API_KEY", "")
