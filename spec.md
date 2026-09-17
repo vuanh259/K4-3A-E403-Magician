@@ -85,7 +85,7 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 
 ---
 ## §4. Thiết kế & Bản mẫu tương tác (CP2)
-- **Lát cắt MỘT CÂU:** *Một học viên khóa AI Thực Chiến · dán hoặc chọn một luồng tin nhắn Discord trong ngày (hoặc gõ lệnh 'tìm cho tôi những vấn đề quan trọng hôm nay') · AI quyết định tin này chứa Task, Deadline hay Lịch đổi khẩn cấp hay không (P1/P2/P3) · trả về Thẻ công việc gồm tiêu đề, thời hạn và độ ưu tiên kèm trích dẫn nguyên văn câu gốc từ TA/Giảng viên (hoặc gắn cờ cảnh báo nếu mốc giờ mập mờ).*
+- **Lát cắt MỘT CÂU:** *Một học viên khóa AI Thực Chiến · gõ lệnh slash command `/summary` (hoặc `/summary all`) trên Discord để tổng hợp tin nhắn trong 24 giờ qua · AI tự động quét các kênh, lọc bỏ tin rác và quyết định tin nào chứa Task, Deadline hay Lịch đổi khẩn cấp (phân cấp P1/P2/P3) · trả về Bản tin Action Digest Embed gồm các thẻ công việc có tiêu đề, hạn chót, độ ưu tiên, trích dẫn gốc có link nhảy đến tin nhắn và nút đánh dấu hoàn thành (kèm cờ cảnh báo nếu mốc giờ mập mờ).*
 - **Non-goals (Năm việc "để sau" KHÔNG build trong sự kiện):**
   1. KHÔNG trả lời giải thích lý thuyết hay chấm code bài tập (nhường VLearn Tutor).
   2. KHÔNG tự ý gửi tin nhắn riêng (DM) làm phiền học viên.
@@ -123,10 +123,10 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 | 7 | ④ Đặc thù domain | Thông báo 1: 21:00, Thông báo 2: dời sang E403 lúc 17:30 | Học viên đến nhầm phòng cũ E402 | So sánh timestamp: Ưu tiên tin đính chính mới nhất lên 🔴 P1 Khẩn cấp |
 | 8 | ④ Đặc thù domain | Nhiều deadline trong 1 tin (CP1 19:30 và CP2 21:00) | Bỏ sót 1 trong 2 deadline | Bóc tách thành 2 thẻ công việc độc lập trên bản tin Digest |
 
-## §6. Bốn đường đi của trải nghiệm (Thao tác trực tiếp trên `codebase/index.html`)
+## §6. Bốn đường đi của trải nghiệm (Thao tác trên Discord Bot thật và bản mô phỏng `index.html`)
 - **Đường 1 — Thuận lợi khi AI tự tin cao (Happy path):**
-  - *Thao tác:* Người dùng gõ câu lệnh *"tìm cho tôi những vấn đề quan trọng hôm nay"* (hoặc bấm nút gợi ý 1).
-  - *Xử lý & Kết quả:* Bot hiển thị hiệu ứng đang đọc tin, sau đó xuất Bản tin Action Digest với 4 thẻ việc chia theo 🔴 P1 Khẩn cấp, 🟡 P2 Quan trọng, 🟢 P3 Theo dõi kèm trích dẫn nguyên văn câu gốc từ TA/Giảng viên.
+  - *Thao tác:* Người dùng gõ lệnh slash command `/summary all` (hoặc `/summary` tick chọn các kênh cần quét) trên Discord, hoặc bấm nút gợi ý trên bản mô phỏng `index.html`.
+  - *Xử lý & Kết quả:* Bot hiển thị thông báo đang quét tin nhắn trong 24 giờ qua, AI lọc nhiễu và trả về Bản tin Action Digest Embed với các thẻ việc chia theo 🔴 P1 Khẩn cấp, 🟡 P2 Quan trọng, 🟢 P3 Theo dõi kèm trích dẫn câu gốc và nút đánh dấu hoàn thành.
 - **Đường 2 — Xử lý khi AI thiếu tự tin (Low-confidence path):**
   - *Thao tác:* Người dùng bấm nút gợi ý 2: *"khi nào nộp lab 2?"*.
   - *Xử lý & Kết quả:* AI phát hiện tin nhắn gốc của TA Quốc Bảo chỉ ghi "nộp vào tối nay". Bot trả về thẻ bài tập Lab 2 kèm nhãn màu vàng hổ phách `[⚠️ Mốc giờ chưa cụ thể]` và cảnh báo: *"AI không tự bịa 23:59 vì tin gốc chỉ nói 'tối nay'"*.
