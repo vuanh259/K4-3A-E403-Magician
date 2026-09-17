@@ -1,17 +1,17 @@
 {
   "metrics": {
     "sample_count": 20,
-    "tp": 10,
-    "fp": 4,
+    "tp": 14,
+    "fp": 0,
     "fn": 0,
     "tn": 6,
-    "accuracy": 0.8,
-    "precision": 0.7142857142857143,
+    "accuracy": 1.0,
+    "precision": 1.0,
     "recall": 1.0,
-    "f1": 0.8333333333333333,
+    "f1": 1.0,
     "type_accuracy": 0.0,
-    "priority_accuracy": 0.7,
-    "deadline_presence_accuracy": 0.8,
+    "priority_accuracy": 0.5384615384615384,
+    "deadline_presence_accuracy": 0.6428571428571429,
     "grounding_rate": 1.0,
     "hallucinated_source_rate": 0.0
   },
@@ -48,7 +48,7 @@
       "gold_type": null,
       "pred_type": "deadline",
       "gold_priority": "medium",
-      "pred_priority": "medium",
+      "pred_priority": "high",
       "gold_has_deadline": true,
       "pred_has_deadline": true
     },
@@ -58,7 +58,7 @@
       "gold_actionable": true,
       "pred_actionable": true,
       "gold_type": null,
-      "pred_type": "assignment",
+      "pred_type": "deadline",
       "gold_priority": "medium",
       "pred_priority": "high",
       "gold_has_deadline": true,
@@ -70,7 +70,7 @@
       "gold_actionable": true,
       "pred_actionable": true,
       "gold_type": null,
-      "pred_type": "assignment",
+      "pred_type": "deadline",
       "gold_priority": "high",
       "pred_priority": "high",
       "gold_has_deadline": true,
@@ -79,14 +79,14 @@
     {
       "id": "CASE_06",
       "message": "Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn.",
-      "gold_actionable": false,
+      "gold_actionable": true,
       "pred_actionable": true,
       "gold_type": null,
       "pred_type": "assignment",
       "gold_priority": "medium",
       "pred_priority": "high",
-      "gold_has_deadline": true,
-      "pred_has_deadline": false
+      "gold_has_deadline": false,
+      "pred_has_deadline": true
     },
     {
       "id": "CASE_07",
@@ -103,26 +103,26 @@
     {
       "id": "CASE_08",
       "message": "Mọi người nhớ nộp báo cáo tiến độ tuần này nhé.",
-      "gold_actionable": false,
+      "gold_actionable": true,
       "pred_actionable": true,
       "gold_type": null,
       "pred_type": "assignment",
       "gold_priority": "low",
       "pred_priority": "medium",
-      "gold_has_deadline": true,
+      "gold_has_deadline": false,
       "pred_has_deadline": false
     },
     {
       "id": "CASE_09",
       "message": "Mai nộp spec nha cả lớp.",
-      "gold_actionable": false,
+      "gold_actionable": true,
       "pred_actionable": true,
       "gold_type": null,
-      "pred_type": "assignment",
+      "pred_type": "deadline",
       "gold_priority": "medium",
       "pred_priority": "medium",
-      "gold_has_deadline": true,
-      "pred_has_deadline": false
+      "gold_has_deadline": false,
+      "pred_has_deadline": true
     },
     {
       "id": "CASE_10",
@@ -158,7 +158,7 @@
       "gold_priority": "high",
       "pred_priority": "high",
       "gold_has_deadline": true,
-      "pred_has_deadline": true
+      "pred_has_deadline": false
     },
     {
       "id": "CASE_13",
@@ -187,12 +187,12 @@
     {
       "id": "CASE_15",
       "message": "Mọi người lưu ý 2 mốc quan trọng: CP1 nộp lúc 19:30 tối nay 16/9, còn CP2 nộp lúc 21:00 cùng ngày.",
-      "gold_actionable": false,
+      "gold_actionable": true,
       "pred_actionable": true,
       "gold_type": null,
       "pred_type": "deadline",
       "gold_priority": null,
-      "pred_priority": "medium",
+      "pred_priority": "high",
       "gold_has_deadline": false,
       "pred_has_deadline": true
     },
@@ -218,7 +218,7 @@
       "gold_priority": "medium",
       "pred_priority": "medium",
       "gold_has_deadline": true,
-      "pred_has_deadline": false
+      "pred_has_deadline": true
     },
     {
       "id": "CASE_18",

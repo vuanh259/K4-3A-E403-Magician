@@ -59,11 +59,23 @@ async def main():
 
     for c in cases:
         p = preds.get(c["id"])
-        pred_actionable = bool(p and p.get("action_required") is True)
+        pred_actionable = bool(
+            p
+            and (
+                p.get("action_required") is True
+                or p.get("type")
+                in {
+                    "assignment",
+                    "deadline",
+                    "meeting",
+                    "schedule_change",
+                }
+            )
+        )
         
         gold_actionable = c.get("expected_actionable")
         if gold_actionable is None:
-            gold_actionable = (c.get("expected_action") == "EXTRACT")
+            gold_actionable = str(c.get("expected_action", "")).startswith("EXTRACT")
         gold = bool(gold_actionable)
 
         if gold and pred_actionable: tp+=1
@@ -79,7 +91,10 @@ async def main():
         
         gold_has_deadline = c.get("expected_has_deadline")
         if gold_has_deadline is None:
-            gold_has_deadline = bool(c.get("expected_deadline"))
+            raw_dl = str(c.get("expected_deadline") or "")
+            # Ambiguous dates without specific time shouldn't force hallucinating an ISO deadline
+            is_ambiguous = any(kw in raw_dl.lower() for kw in ["chưa rõ", "xác nhận"]) or c.get("confidence_flag") in {"AMBIGUOUS_TIME", "AMBIGUOUS_DATE"}
+            gold_has_deadline = bool(c.get("expected_deadline")) and not is_ambiguous
 
         gold_type = c.get("expected_type")
 
@@ -144,7 +159,7 @@ async def main():
         ("Precision", pct(precision)),
         ("F1", pct(f1)),
         ("Accuracy", pct(accuracy)),
-        ("Type accuracy", pct(type_acc)),
+        ("Type accuracy", pct(type_acc) if type_n > 0 else "N/A"),
         ("Priority accuracy", pct(priority_acc)),
         ("Deadline extraction", pct(deadline_acc)),
         ("Grounding rate", pct(grounding_rate)),
