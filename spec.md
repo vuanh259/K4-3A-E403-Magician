@@ -1,4 +1,4 @@
-﻿# AI SPEC — Discord Action Digest (Trích xuất Task, Deadline & Thay đổi lịch) · Nhóm Magician · Phòng E403
+# AI SPEC — Discord Action Digest (Trích xuất Task, Deadline & Thay đổi lịch) · Nhóm Magician · Phòng E403
 Hướng: [ ] A — VLearn  [x] B — Trợ lý Học viên (Discord)  [ ] C — Làn mở  
 Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 
@@ -131,14 +131,35 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 
 ## §7. Kiểm thử
 - **Chiều chất lượng:** Precision trích xuất $\ge 90\%$, Recall deadline $\ge 85\%$, Zero Hallucination Rate $100\%$.
-- **Golden set:** 20 case đa dạng lưu tại `eval/golden_set.json` phủ kín 4 lớp chỗ khó.
-- **Quality bar:** "Đạt khi $\ge 85\%$ trích xuất chính xác task/deadline trên bộ Golden Set, và $100\%$ không bịa đặt deadline khi thông tin không rõ ràng."
+- **Cơ cấu Golden Set (22 trường hợp tại `eval/golden_set.json`):**
+  - $\ge 2$ case cho mỗi lớp trong 4 lớp chỗ khó:
+    - ① Nguồn sự thật (Chống bịa giờ): TC01, TC02 (2 cases)
+    - ② Mơ hồ / thiếu thông tin: TC03, TC04 (2 cases)
+    - ③ Ngoài phạm vi / thẩm quyền: TC05, TC06 (2 cases)
+    - ④ Đặc thù nghiệp vụ: TC07, TC08, TC22 (3 cases)
+  - 8 trường hợp phổ biến hàng ngày: TC09 đến TC16 (8 cases)
+  - 5 trường hợp hiếm gặp (Edge cases): TC17 đến TC21 (5 cases)
+  - **13/22 trường hợp trích xuất trực tiếp từ data thật (`discord-pack/k4_messages.csv`).**
+- **Quality Bar đã chốt:** "Đạt khi $\ge 85.0\%$ qua bộ Golden Set, và $100\%$ không bịa đặt deadline khi thông tin mập mờ (Zero Hallucination)."
+- **Kết quả lượt chạy thực tế (Lượt 1 - Cập nhật trước CP3 tại `eval/EVAL_REPORT.md`):**
+  - **Số ca kiểm thử:** 22 cases
+  - **Đạt chuẩn (PASS):** 19/22 cases (**86.4%** — Đạt Quality Bar $\ge 85\%$)
+  - **Không đạt (FAIL):** 3/22 cases (TC11, TC14, TC18)
+  - *Tỷ lệ theo 4 lớp chỗ khó:*
+    - ① Nguồn sự thật: 2/2 (100%) — Tuyệt đối không bịa giờ 23:59.
+    - ② Mơ hồ / Thiếu tin: 2/2 (100%) — Gắn cờ cảnh báo đúng chuẩn.
+    - ③ Ngoài phạm vi: 2/2 (100%) — Từ chối hữu ích, hướng dẫn VLearn Tutor.
+    - ④ Đặc thù nghiệp vụ: 3/3 (100%) — Bắt đúng dời lịch và dời phòng học.
+  - *Phân tích 3 lỗi thất bại:*
+    1. TC18 (Nhiều deadline trong 1 tin): Bị cắt cụt mốc sau, chỉ bắt được mốc đầu. Khắc phục: Đệ quy duyệt JSON items.
+    2. TC11 (Phân loại nhầm P3): Thiếu keyword 'lab/spec', xếp nhầm Slide PDF vào P3. Khắc phục: Thêm trọng số keyword 'slide/demo'.
+    3. TC14 (Nhận diện quá thận trọng): Gắn cờ ambiguous do câu 'trước buổi học ngày mai'. Khắc phục: Chuẩn hóa ngữ cảnh thời gian.
 
 ## §8. Phân công & Kế hoạch
 - **Nguyễn Vũ Anh (2A202602502):** Đội trưởng · AI Spec & Bằng chứng khảo sát.
 - **Nguyễn Thành Duy (2A202602804):** AI & Prompt Engineering (P1/P2/P3).
 - **Trương Việt Anh (2A202602444):** Fullstack & Discord Integration (`codebase/index.html`).
-- **Phạm Quang Đạt (2A202602704):** QA & Golden Set 20 case (`eval/golden_set.json`).
+- **Phạm Quang Đạt (2A202602704):** QA & Golden Set 22 case (`eval/golden_set.json` & `eval/run_eval.py`).
 - **Willing users (CP5):** Lê Nguyễn Thái Dương (2A202602383), Nguyễn Xuân Khuê (2A202602999).
 
 ## §9. Changelog
@@ -147,3 +168,5 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 | 16/9 - 19:00 | Khởi tạo Canvas & Spec CP1 | Chốt ý tưởng Action Digest & Canvas 4 ô |
 | 16/9 - 19:35 | Cập nhật Canvas theo slide chữa bài | Gọt 4 ô theo chuẩn Pain · Bằng chứng · Impact · Lát cắt |
 | 16/9 - 20:20 | Hoàn thiện CP2 khớp 100% với `index.html` | Cập nhật luồng chat bot tương tác, 4 kịch bản bấm thử, HAX G1/G2/G9/G11 |
+| 17/9 - 10:30 | Xây dựng Golden Set 22 case & chạy Eval | Đo lường định lượng cho CP3 & khoá Quality Bar theo form hướng dẫn |
+
