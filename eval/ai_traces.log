@@ -1,0 +1,73 @@
+=== [AI TRACE - 2026-09-17T14:00:28.782203] ===
+MODEL: openai/gpt-4o-mini
+INPUT PAYLOAD:
+{
+  "current_time": "2026-09-17T14:00:21.343211+07:00",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "messages": [
+    {
+      "message_id": "TEST_01",
+      "channel_id": "test",
+      "channel_name": "announcements",
+      "author": "Giảng viên Lead Coach",
+      "created_at": "2026-09-17T14:00:21.343211+07:00",
+      "content": "Các nhóm chú ý: Hạn nộp Checkpoint 1 là 19:30 tối nay ngày 16/9. Đội trưởng nộp link repo GitHub và Canvas 4 ô qua form nhé.",
+      "jump_url": null
+    },
+    {
+      "message_id": "TEST_02",
+      "channel_id": "test",
+      "channel_name": "general",
+      "author": "TA - Quốc Bảo",
+      "created_at": "2026-09-17T14:00:21.343211+07:00",
+      "content": "Bài tập Lab 2 nhớ hoàn thành và nộp trên VLearn vào tối nay nhé các bạn.",
+      "jump_url": null
+    },
+    {
+      "message_id": "TEST_03",
+      "channel_id": "test",
+      "channel_name": "announcements",
+      "author": "TA - Support",
+      "created_at": "2026-09-17T14:00:21.343211+07:00",
+      "content": "Phương án dự phòng: Nếu chiều nay phòng E402 bị cúp điện thì buổi họp dời sang phòng E403 lúc 15:00 nhé.",
+      "jump_url": null
+    }
+  ]
+}
+RAW LLM RESPONSE:
+{
+  "items": [
+    {
+      "source_message_id": "TEST_01",
+      "type": "deadline",
+      "title": "Hạn nộp Checkpoint 1",
+      "action_required": true,
+      "deadline_iso": "2026-09-16T19:30:00+07:00",
+      "priority": "high",
+      "confidence": 0.95,
+      "reason": "Hạn nộp rõ ràng cho Checkpoint 1."
+    },
+    {
+      "source_message_id": "TEST_02",
+      "type": "assignment",
+      "title": "Bài tập Lab 2",
+      "action_required": true,
+      "deadline_iso": "2026-09-17T19:30:00+07:00",
+      "priority": "high",
+      "confidence": 0.95,
+      "reason": "Hạn nộp rõ ràng cho bài tập Lab 2."
+    },
+    {
+      "source_message_id": "TEST_03",
+      "type": "schedule_change",
+      "title": "Buổi họp dời phòng",
+      "action_required": true,
+      "deadline_iso": null,
+      "priority": "medium",
+      "confidence": 0.80,
+      "reason": "Dời buổi họp nếu có cúp điện, cần theo dõi tình hình."
+    }
+  ]
+}
+============================================================
+

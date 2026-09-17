@@ -104,7 +104,23 @@ async def analyze_messages(messages: list[dict], current_time_iso: str, timezone
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
         ],
     )
-    data = _extract_json(resp.choices[0].message.content or "{}")
+    raw_response_text = resp.choices[0].message.content or "{}"
+
+    # CP3: Thiết lập cơ chế ghi vết (logging) cho prompt đầu vào và phản hồi thô của mô hình
+    try:
+        from pathlib import Path
+        from datetime import datetime
+        log_file = Path(__file__).resolve().parent.parent / "eval" / "ai_traces.log"
+        with open(log_file, "a", encoding="utf-8") as lf:
+            lf.write(f"=== [AI TRACE - {datetime.now().isoformat()}] ===\n")
+            lf.write(f"MODEL: {settings.ai_model}\n")
+            lf.write(f"INPUT PAYLOAD:\n{json.dumps(payload, ensure_ascii=False, indent=2)}\n")
+            lf.write(f"RAW LLM RESPONSE:\n{raw_response_text}\n")
+            lf.write("=" * 60 + "\n\n")
+    except Exception as e:
+        print(f"[WARN] Không thể ghi log ai_traces: {e}")
+
+    data = _extract_json(raw_response_text)
     if not isinstance(data.get("items"), list):
         data["items"] = []
 
