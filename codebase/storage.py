@@ -48,6 +48,16 @@ class Store:
             await db.executescript(SCHEMA)
             await db.commit()
 
+    async def get_last_summary_run(self, user_id: int) -> dict | None:
+        async with aiosqlite.connect(self.db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cur = await db.execute(
+                "SELECT * FROM summary_runs WHERE user_id=? ORDER BY id DESC LIMIT 1",
+                (str(user_id),),
+            )
+            row = await cur.fetchone()
+            return dict(row) if row else None
+
     async def save_summary_run(self, user_id: int, guild_id: int | None, channels: list[str], message_count: int, item_count: int):
         now = datetime.utcnow().isoformat()
         async with aiosqlite.connect(self.db_path) as db:
@@ -57,40 +67,68 @@ class Store:
             )
             await db.commit()
 
-    async def upsert_items(self, user_id: int, guild_id: int | None, items: list[dict[str, Any]]) -> list[int]:
+    async def upsert_items(self, user_id: int, guild_id: int | None, items: list[dict[str, Any]]) -> tuple[list[int], list[bool]]:
         ids: list[int] = []
+        is_new_flags: list[bool] = []
         now = datetime.utcnow().isoformat()
         async with aiosqlite.connect(self.db_path) as db:
+            db.row_factory = aiosqlite.Row
             for item in items:
-                cur = await db.execute(
-                    """
-                    INSERT INTO tasks(
-                        user_id,guild_id,channel_name,title,type,priority,deadline_iso,confidence,
-                        source_message_id,source_url,source_author,source_message,reason,status,
-                        reminder_sent,created_at,updated_at
-                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'open',0,?,?)
-                    """,
-                    (
-                        str(user_id),
-                        str(guild_id) if guild_id else None,
-                        item.get("source_channel"),
-                        item.get("title") or "Untitled",
-                        item.get("type") or "info",
-                        item.get("priority") or "medium",
-                        item.get("deadline_iso"),
-                        float(item.get("confidence") or 0),
-                        item.get("source_message_id"),
-                        item.get("source_url"),
-                        item.get("source_author"),
-                        item.get("source_message"),
-                        item.get("reason"),
-                        now,
-                        now,
-                    ),
-                )
-                ids.append(cur.lastrowid)
+                sid = item.get("source_message_id")
+                existing = None
+                if sid:
+                    cur_find = await db.execute(
+                        "SELECT id FROM tasks WHERE user_id=? AND source_message_id=? ORDER BY id DESC LIMIT 1",
+                        (str(user_id), str(sid)),
+                    )
+                    existing = await cur_find.fetchone()
+
+                if existing:
+                    ids.append(existing["id"])
+                    is_new_flags.append(False)
+                else:
+                    title_lower = (item.get("title") or "").lower()
+                    is_cancelled_or_no_dl = (
+                        item.get("deadline_iso") is None
+                        or "hủy" in title_lower
+                        or "đóng" in title_lower
+                        or "cancel" in title_lower
+                    )
+                    initial_status = "cancelled" if ("hủy" in title_lower or "đóng" in title_lower) else "open"
+                    reminder_sent_flag = 1 if is_cancelled_or_no_dl else 0
+
+                    cur = await db.execute(
+                        """
+                        INSERT INTO tasks(
+                            user_id,guild_id,channel_name,title,type,priority,deadline_iso,confidence,
+                            source_message_id,source_url,source_author,source_message,reason,status,
+                            reminder_sent,created_at,updated_at
+                        ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                        """,
+                        (
+                            str(user_id),
+                            str(guild_id) if guild_id else None,
+                            item.get("source_channel"),
+                            item.get("title") or "Untitled",
+                            item.get("type") or "info",
+                            item.get("priority") or "medium",
+                            item.get("deadline_iso"),
+                            float(item.get("confidence") or 0),
+                            item.get("source_message_id"),
+                            item.get("source_url"),
+                            item.get("source_author"),
+                            item.get("source_message"),
+                            item.get("reason"),
+                            initial_status,
+                            reminder_sent_flag,
+                            now,
+                            now,
+                        ),
+                    )
+                    ids.append(cur.lastrowid)
+                    is_new_flags.append(True)
             await db.commit()
-        return ids
+        return ids, is_new_flags
 
     async def list_open_tasks(self, user_id: int, limit: int = 20) -> list[dict]:
         async with aiosqlite.connect(self.db_path) as db:

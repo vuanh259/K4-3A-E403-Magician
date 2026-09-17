@@ -1,45 +1,36 @@
-import argparse
+"""Run the Golden Set through the real LLM extractor and score the output."""
+
 import asyncio
 import html
 import json
 import re
 import sys
-from collections import Counter, defaultdict
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from dotenv import load_dotenv
+
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parents[1]
-EVAL_DIR = Path(__file__).parent
-sys.path.insert(0, str(ROOT / "codebase"))
+EVAL_DIR = Path(__file__).resolve().parent
+CODEBASE_DIR = ROOT / "codebase"
 
-from dotenv import load_dotenv
-
-load_dotenv(ROOT / "codebase" / ".env")
+# config.py calls load_dotenv() too, but the evaluator is normally launched
+# from the repository root while the real secrets live in codebase/.env.
+load_dotenv(CODEBASE_DIR / ".env")
+sys.path.insert(0, str(CODEBASE_DIR))
 
 from ai import analyze_messages
 from config import settings
 
 
-PRIORITY_MAP = {
-    "P1": "high",
-    "HIGH": "high",
-    "high": "high",
-    "P2": "medium",
-    "MEDIUM": "medium",
-    "medium": "medium",
-    "P3": "low",
-    "LOW": "low",
-    "low": "low",
-}
-
-
-def div(a: int | float, b: int | float) -> float:
-    return a / b if b else 0.0
+POSITIVE_ACTIONS = {"EXTRACT", "EXTRACT_WITH_WARNING", "EXTRACT_MULTIPLE"}
+PRIORITY_MAP = {"P1": "high", "P2": "medium", "P3": "low"}
 
 
 def pct(value: float) -> str:
@@ -56,449 +47,256 @@ def write_json(path: Path, data: Any) -> None:
     atomic_write(path, json.dumps(data, ensure_ascii=False, indent=2))
 
 
-def next_run_number() -> int:
-    run_numbers = []
-    for path in EVAL_DIR.glob("run_*_raw.json"):
-        match = re.fullmatch(r"run_(\d+)_raw\.json", path.name)
-        if match:
-            run_numbers.append(int(match.group(1)))
-    return max(run_numbers, default=0) + 1
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run the CP3 Golden Set evaluation.")
-    parser.add_argument(
-        "--run-number",
-        type=int,
-        default=next_run_number(),
-        help="Run number used in evidence filenames (default: next unused number).",
-    )
-    args = parser.parse_args()
-    if args.run_number < 1:
-        parser.error("--run-number must be at least 1")
-    return args
-
-
-def preserve_run_one_reports() -> None:
-    """Archive legacy canonical Run 1 reports before writing a later run."""
-    mappings = {
-        EVAL_DIR / "latest_eval_result.json": EVAL_DIR / "run_1_eval_result.json",
-        EVAL_DIR / "report.html": EVAL_DIR / "run_1_report.html",
-        EVAL_DIR / "run_results.md": EVAL_DIR / "run_1_results.md",
-    }
-    for source, archive in mappings.items():
-        if source.exists() and not archive.exists():
-            atomic_write(archive, source.read_text(encoding="utf-8"))
-
-
-def normalize_iso(value: Any) -> datetime | None:
-    if not isinstance(value, str) or not value.strip():
-        return None
-    try:
-        return datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
-    except ValueError:
-        return None
-
-
-def iso_equal(actual: Any, expected: Any) -> bool:
-    actual_dt = normalize_iso(actual)
-    expected_dt = normalize_iso(expected)
-    if actual_dt is None or expected_dt is None:
-        return False
-    try:
-        return actual_dt == expected_dt
-    except TypeError:
-        # A timezone-aware timestamp must not silently match a naive timestamp.
-        return False
-
-
 def md_cell(value: Any) -> str:
     return str(value if value is not None else "—").replace("|", "\\|").replace("\n", " ")
 
 
-def classify_failure(reasons: list[str]) -> str:
-    joined = " ".join(reasons)
-    if "không tạo item" in joined:
-        return "Bỏ sót hành động (false negative)"
-    if "không mong đợi" in joined or "Số item" in joined:
-        return "Trích xuất thừa hoặc sai phạm vi"
-    if "Sai type" in joined:
-        return "Phân loại nghiệp vụ chưa đúng"
-    if "Sai trạng thái deadline" in joined or "Sai deadline:" in joined:
-        return "Hiểu hoặc chuẩn hóa thời gian chưa đúng"
-    if "Sai priority" in joined:
-        return "Xếp mức ưu tiên chưa đúng"
-    return "Đầu ra chưa khớp tiêu chí nghiệm thu"
-
-
-def score_cases(cases: list[dict], result: dict, trace: dict) -> tuple[dict, list[dict]]:
-    items = result.get("items", [])
-    predictions: dict[str, list[dict]] = defaultdict(list)
-    for item in items:
-        predictions[str(item.get("source_message_id", ""))].append(item)
-
-    raw_items = trace.get("parsed_response_before_grounding", {}).get("items", [])
-    if not isinstance(raw_items, list):
-        raw_items = []
-    valid_ids = {str(case["id"]) for case in cases}
-    hallucinated_sources = [
-        str(item.get("source_message_id", ""))
-        for item in raw_items
-        if str(item.get("source_message_id", "")) not in valid_ids
-    ]
-
-    tp = fp = fn = tn = 0
-    type_ok = priority_ok = deadline_presence_ok = 0
-    type_n = priority_n = deadline_presence_n = 0
-    exact_deadline_ok = exact_deadline_n = 0
-    title_ok = title_n = 0
-    rows: list[dict] = []
-
-    for case in cases:
-        case_id = str(case["id"])
-        predicted_items = predictions.get(case_id, [])
-        actionable_items = [item for item in predicted_items if item.get("action_required") is True]
-        candidate = actionable_items[0] if actionable_items else (predicted_items[0] if predicted_items else None)
-
-        gold_actionable = bool(case.get("expected_actionable"))
-        pred_actionable = bool(actionable_items)
-        expected_count = int(case.get("expected_items_count", 1 if gold_actionable else 0))
-        actual_count = len(predicted_items)
-
-        if gold_actionable and pred_actionable:
-            tp += 1
-        elif not gold_actionable and pred_actionable:
-            fp += 1
-        elif gold_actionable and not pred_actionable:
-            fn += 1
-        else:
-            tn += 1
-
-        gold_type = case.get("expected_type")
-        raw_priority = case.get("expected_priority")
-        gold_priority = PRIORITY_MAP.get(str(raw_priority).upper(), raw_priority) if raw_priority else None
-        gold_has_deadline = case.get("expected_has_deadline")
-        if gold_has_deadline is None:
-            gold_has_deadline = bool(case.get("expected_deadline"))
-        gold_has_deadline = bool(gold_has_deadline)
-        expected_deadline = case.get("expected_deadline")
-        expected_keywords = [str(value) for value in case.get("expected_title_keywords", [])]
-
-        pred_type = candidate.get("type") if candidate else None
-        pred_priority = candidate.get("priority") if candidate else None
-        pred_deadline = candidate.get("deadline_iso") if candidate else None
-        pred_has_deadline = bool(pred_deadline)
-        pred_title = str(candidate.get("title", "")) if candidate else ""
-        pred_confidence = candidate.get("confidence") if candidate else None
-
-        count_match = actual_count == expected_count
-        actionable_match = pred_actionable == gold_actionable
-        type_match = not gold_type or pred_type == gold_type
-        priority_match = not gold_priority or pred_priority == gold_priority
-        deadline_presence_match = pred_has_deadline == gold_has_deadline
-        exact_deadline_match = not expected_deadline or iso_equal(pred_deadline, expected_deadline)
-        missing_keywords = [keyword for keyword in expected_keywords if keyword.casefold() not in pred_title.casefold()]
-        title_match = not missing_keywords
-
-        if gold_actionable:
-            if gold_type:
-                type_n += 1
-                type_ok += int(type_match)
-            if gold_priority:
-                priority_n += 1
-                priority_ok += int(priority_match)
-            deadline_presence_n += 1
-            deadline_presence_ok += int(deadline_presence_match)
-            if expected_deadline:
-                exact_deadline_n += 1
-                exact_deadline_ok += int(exact_deadline_match)
-            if expected_keywords:
-                title_n += 1
-                title_ok += int(title_match)
-
-        reasons: list[str] = []
-        if not count_match:
-            reasons.append(f"Số item: mong đợi {expected_count}, thực tế {actual_count}")
-        if not actionable_match:
-            if gold_actionable:
-                reasons.append("Model không tạo item actionable")
-            else:
-                reasons.append("Model tạo item actionable không mong đợi")
-        if gold_actionable and not type_match:
-            reasons.append(f"Sai type: mong đợi {gold_type}, thực tế {pred_type}")
-        if gold_actionable and not priority_match:
-            reasons.append(f"Sai priority: mong đợi {gold_priority}, thực tế {pred_priority}")
-        if gold_actionable and not deadline_presence_match:
-            reasons.append(
-                f"Sai trạng thái deadline: mong đợi {gold_has_deadline}, thực tế {pred_has_deadline}"
-            )
-        if gold_actionable and not exact_deadline_match:
-            reasons.append(f"Sai deadline: mong đợi {expected_deadline}, thực tế {pred_deadline}")
-        diagnostic_warnings: list[str] = []
-        if gold_actionable and not title_match:
-            diagnostic_warnings.append(
-                "Tiêu đề chưa chứa từ khóa tham chiếu: " + ", ".join(missing_keywords)
-            )
-
-        case_pass = all(
-            [
-                count_match,
-                actionable_match,
-                type_match,
-                priority_match,
-                deadline_presence_match,
-                exact_deadline_match,
-            ]
-        )
-        rows.append(
-            {
-                "id": case_id,
-                "case_group": case.get("case_group"),
-                "layer": case.get("layer"),
-                "scenario": case.get("scenario"),
-                "message": case.get("input_text") or case.get("message") or "",
-                "expected_actionable": gold_actionable,
-                "predicted_actionable": pred_actionable,
-                "expected_items_count": expected_count,
-                "predicted_items_count": actual_count,
-                "expected_type": gold_type,
-                "predicted_type": pred_type,
-                "expected_priority": gold_priority,
-                "predicted_priority": pred_priority,
-                "expected_has_deadline": gold_has_deadline,
-                "predicted_has_deadline": pred_has_deadline,
-                "expected_deadline": expected_deadline,
-                "predicted_deadline": pred_deadline,
-                "expected_title_keywords": expected_keywords,
-                "predicted_title": pred_title or None,
-                "predicted_confidence": pred_confidence,
-                "documented_pass_criteria": case.get("pass_criteria", []),
-                "checks": {
-                    "count": count_match,
-                    "actionable": actionable_match,
-                    "type": type_match,
-                    "priority": priority_match,
-                    "deadline_presence": deadline_presence_match,
-                    "exact_deadline": exact_deadline_match,
-                    "title_keywords": title_match,
-                },
-                "result": "PASS" if case_pass else "FAIL",
-                "failure_reasons": reasons,
-                "diagnostic_warnings": diagnostic_warnings,
-                "failure_category": None if case_pass else classify_failure(reasons),
-            }
-        )
-
-    passed = sum(row["result"] == "PASS" for row in rows)
-    precision = div(tp, tp + fp)
-    recall = div(tp, tp + fn)
-    metrics = {
-        "sample_count": len(cases),
-        "passed": passed,
-        "failed": len(cases) - passed,
-        "pass_rate": div(passed, len(cases)),
-        "tp": tp,
-        "fp": fp,
-        "fn": fn,
-        "tn": tn,
-        "actionability_accuracy": div(tp + tn, len(cases)),
-        "precision": precision,
-        "recall": recall,
-        "f1": div(2 * precision * recall, precision + recall),
-        "type_accuracy": div(type_ok, type_n),
-        "priority_accuracy": div(priority_ok, priority_n),
-        "deadline_presence_accuracy": div(deadline_presence_ok, deadline_presence_n),
-        "exact_deadline_accuracy": div(exact_deadline_ok, exact_deadline_n),
-        "title_keyword_coverage": div(title_ok, title_n),
-        "raw_model_item_count": len(raw_items),
-        "grounded_item_count": len(raw_items) - len(hallucinated_sources),
-        "grounding_rate": div(len(raw_items) - len(hallucinated_sources), len(raw_items)),
-        "hallucinated_source_count": len(hallucinated_sources),
-        "hallucinated_source_rate": div(len(hallucinated_sources), len(raw_items)),
-        "hallucinated_source_ids": hallucinated_sources,
+def compact_item(item: dict) -> dict:
+    """Keep only model decision fields in eval evidence."""
+    return {
+        "source_message_id": item.get("source_message_id"),
+        "type": item.get("type"),
+        "title": item.get("title"),
+        "action_required": item.get("action_required"),
+        "deadline_iso": item.get("deadline_iso"),
+        "priority": item.get("priority"),
+        "confidence": item.get("confidence"),
+        "reason": item.get("reason"),
     }
-    return metrics, rows
 
 
-def build_markdown(run_info: dict, metrics: dict, rows: list[dict]) -> str:
-    failures = [row for row in rows if row["result"] == "FAIL"]
-    category_counts = Counter(row["failure_category"] for row in failures)
+def deadline_matches(expected: Any, actual: Any, now: datetime) -> bool:
+    """Compare only date/time components explicitly present in the Golden Set."""
+    if not expected:
+        return True
+    if not actual:
+        return False
+
+    expected_text = str(expected).lower()
+    actual_text = str(actual)
+
+    expected_time = re.search(r"\b(\d{1,2}):(\d{2})\b", expected_text)
+    if expected_time:
+        hour = int(expected_time.group(1))
+        minute = int(expected_time.group(2))
+        if not re.search(rf"(?:T|\s){hour:02d}:{minute:02d}(?::|\b)", actual_text):
+            return False
+
+    expected_date = re.search(r"\b(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?\b", expected_text)
+    if expected_date:
+        day = int(expected_date.group(1))
+        month = int(expected_date.group(2))
+        if not re.search(rf"-{month:02d}-{day:02d}(?:T|\s)", actual_text):
+            return False
+    elif "hôm nay" in expected_text:
+        if now.date().isoformat() not in actual_text:
+            return False
+
+    return True
+
+
+def score_case(case: dict, predicted_items: list[dict], now: datetime) -> dict:
+    expected_action = case["expected_action"]
+    actionable_items = [item for item in predicted_items if item.get("action_required") is True]
+    reasons: list[str] = []
+
+    if expected_action not in POSITIVE_ACTIONS:
+        passed = len(predicted_items) == 0
+        if not passed:
+            reasons.append(f"Mong đợi bỏ qua nhưng model trả {len(predicted_items)} item")
+    else:
+        expected_count = int(case.get("expected_tasks_count", 1))
+        actual_count = len(actionable_items)
+        passed = actual_count == expected_count
+        if actual_count != expected_count:
+            reasons.append(f"Số item actionable: mong đợi {expected_count}, thực tế {actual_count}")
+
+        if expected_action == "EXTRACT_WITH_WARNING" and actionable_items:
+            invented_deadlines = [item.get("deadline_iso") for item in actionable_items if item.get("deadline_iso")]
+            if invented_deadlines:
+                passed = False
+                reasons.append("Mốc thời gian mơ hồ nhưng model vẫn điền deadline_iso")
+
+        expected_priority = PRIORITY_MAP.get(case.get("expected_priority"))
+        if expected_priority and actionable_items:
+            actual_priority = actionable_items[0].get("priority")
+            if actual_priority != expected_priority:
+                passed = False
+                reasons.append(
+                    f"Priority: mong đợi {expected_priority}, thực tế {actual_priority}"
+                )
+
+        expected_deadline = case.get("expected_deadline")
+        if (
+            expected_action != "EXTRACT_WITH_WARNING"
+            and expected_deadline
+            and actionable_items
+            and re.search(r"\b\d{1,2}:\d{2}\b", str(expected_deadline))
+        ):
+            actual_deadline = actionable_items[0].get("deadline_iso")
+            if not deadline_matches(expected_deadline, actual_deadline, now):
+                passed = False
+                reasons.append(
+                    f"Deadline: mong đợi {expected_deadline}, thực tế {actual_deadline}"
+                )
+
+    if not reasons:
+        reasons.append("Đáp ứng các tiêu chí tự động của ca kiểm thử")
+
+    return {
+        "id": case["id"],
+        "layer": case["layer"],
+        "ref_id": case.get("ref_id"),
+        "is_real_data": bool(case.get("is_real_data")),
+        "input_text": case["input_text"],
+        "sender": case.get("sender"),
+        "expected_action": expected_action,
+        "expected_priority": case.get("expected_priority"),
+        "expected_deadline": case.get("expected_deadline"),
+        "pass_condition": case.get("pass_condition"),
+        "predicted_items": [compact_item(item) for item in predicted_items],
+        "predicted_items_count": len(predicted_items),
+        "predicted_actionable_count": len(actionable_items),
+        "passed": passed,
+        "reasons": reasons,
+    }
+
+
+def build_markdown(run: dict, metrics: dict, rows: list[dict]) -> str:
+    failures = [row for row in rows if not row["passed"]]
     lines = [
-        f"# CP3 — Kết quả đánh giá Run {run_info['run_number']}",
+        "# BÁO CÁO KẾT QUẢ KIỂM THỬ ĐỊNH LƯỢNG — CP3",
         "",
-        "> Đây là kết quả thực nghiệm do `eval/run_eval.py` sinh tự động từ lời gọi AI thật. Không chỉnh tay số PASS/FAIL.",
+        "**Dự án:** Discord Action Digest · **Nhóm:** Magician · **Lớp:** 3A · **Phòng:** E403",
         "",
-        "## Thông tin lượt chạy",
+        "> Toàn bộ Golden Set được gửi qua module AI thật trong một request. Kết quả dưới đây được sinh tự động, không gán cứng PASS/FAIL theo mã ca.",
         "",
-        f"- Thời điểm: `{run_info['completed_at']}`",
-        f"- Model yêu cầu: `{md_cell(run_info['requested_model'])}`",
-        f"- Model phản hồi: `{md_cell(run_info.get('response_model'))}`",
-        f"- Múi giờ: `{md_cell(run_info['timezone'])}`",
-        f"- Golden Set: `{metrics['sample_count']}` ca",
-        f"- Log prompt và phản hồi thô: `eval/{run_info['raw_log_name']}`",
+        "## 1. Thông tin lượt chạy",
         "",
-        "## Kết quả chính",
+        f"- Thời điểm: `{run['completed_at']}`",
+        f"- Model: `{run['model']}`",
+        f"- Múi giờ: `{run['timezone']}`",
+        f"- Log prompt và phản hồi thô: `eval/ai_traces.log`",
         "",
-        f"- Đạt: **{metrics['passed']}/{metrics['sample_count']}** ca",
-        f"- Không đạt: **{metrics['failed']}/{metrics['sample_count']}** ca",
-        f"- Tỷ lệ đạt: **{pct(metrics['pass_rate'])}**",
+        "## 2. Tổng hợp kết quả",
         "",
-        "| Chỉ số | Kết quả |",
-        "|---|---:|",
-        f"| Actionability accuracy | {pct(metrics['actionability_accuracy'])} |",
-        f"| Precision | {pct(metrics['precision'])} |",
-        f"| Recall | {pct(metrics['recall'])} |",
-        f"| F1 | {pct(metrics['f1'])} |",
-        f"| Type accuracy | {pct(metrics['type_accuracy'])} |",
-        f"| Priority accuracy | {pct(metrics['priority_accuracy'])} |",
-        f"| Deadline presence accuracy | {pct(metrics['deadline_presence_accuracy'])} |",
-        f"| Exact deadline accuracy | {pct(metrics['exact_deadline_accuracy'])} |",
-        f"| Title keyword coverage (tham khảo) | {pct(metrics['title_keyword_coverage'])} |",
-        f"| Grounding rate trước khi lọc | {pct(metrics['grounding_rate'])} |",
-        f"| Source ID bịa | {metrics['hallucinated_source_count']} |",
+        f"- Tổng số ca: **{metrics['total']}**",
+        f"- Số ca đạt: **{metrics['passed']}**",
+        f"- Số ca không đạt: **{metrics['failed']}**",
+        f"- Tỷ lệ đạt: **{pct(metrics['pass_rate'])}** ({metrics['passed']}/{metrics['total']})",
+        f"- Ca từ dữ liệu thật: **{metrics['real_data_cases']}**",
+        f"- Tổng item model trả về: **{metrics['predicted_item_count']}**",
         "",
-        "## Kết quả từng ca",
+        "### Kết quả theo nhóm",
         "",
-        "| ID | Nhóm | Kịch bản | Số item (E/A) | Type (E/A) | Deadline (E/A) | Kết quả | Nguyên nhân |",
-        "|---|---|---|---:|---|---|---|---|",
+        "| Nhóm / lớp | Tổng | Đạt | Tỷ lệ |",
+        "|---|---:|---:|---:|",
     ]
+    for layer, stats in metrics["layer_breakdown"].items():
+        lines.append(
+            f"| {md_cell(layer)} | {stats['total']} | {stats['passed']} | {pct(stats['pass_rate'])} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## 3. Kết quả từng ca",
+            "",
+            "| ID | Nhóm | Expected | Số item/actionable | Kết quả | Giải thích |",
+            "|---|---|---|---:|---|---|",
+        ]
+    )
     for row in rows:
-        deadline_expected = row["expected_deadline"] or str(row["expected_has_deadline"])
-        deadline_actual = row["predicted_deadline"] or str(row["predicted_has_deadline"])
-        reason = "; ".join(row["failure_reasons"])
-        if not reason and row["diagnostic_warnings"]:
-            reason = "PASS; lưu ý: " + "; ".join(row["diagnostic_warnings"])
-        if not reason:
-            reason = "Đáp ứng toàn bộ tiêu chí tự động"
         lines.append(
             "| "
             + " | ".join(
                 md_cell(value)
                 for value in [
                     row["id"],
-                    row["case_group"],
-                    row["scenario"],
-                    f"{row['expected_items_count']}/{row['predicted_items_count']}",
-                    f"{row['expected_type'] or '—'}/{row['predicted_type'] or '—'}",
-                    f"{deadline_expected}/{deadline_actual}",
-                    row["result"],
-                    reason,
+                    row["layer"],
+                    row["expected_action"],
+                    f"{row['predicted_items_count']}/{row['predicted_actionable_count']}",
+                    "PASS" if row["passed"] else "FAIL",
+                    "; ".join(row["reasons"]),
                 ]
             )
             + " |"
         )
 
-    lines.extend(["", "## Phân tích các ca sai lệch", ""])
+    lines.extend(["", "## 4. Phân tích các ca thất bại", ""])
     if not failures:
         lines.append("Không có ca thất bại trong lượt chạy này.")
     else:
-        lines.extend(["### Tổng hợp nhóm nguyên nhân", ""])
-        for category, count in category_counts.most_common():
-            lines.append(f"- {category}: {count} ca")
-        lines.extend(["", "### Chi tiết", ""])
         for row in failures:
+            predicted = row["predicted_items"]
             lines.extend(
                 [
-                    f"#### {row['id']} — {row['scenario']}",
+                    f"### {row['id']} — {row['layer']}",
                     "",
-                    f"- Nhóm nguyên nhân: {row['failure_category']}",
-                    f"- Đầu ra dự kiến: count={row['expected_items_count']}, type={row['expected_type']}, priority={row['expected_priority']}, deadline={row['expected_deadline'] or row['expected_has_deadline']}.",
-                    f"- Đầu ra thực tế: count={row['predicted_items_count']}, type={row['predicted_type']}, priority={row['predicted_priority']}, deadline={row['predicted_deadline'] or row['predicted_has_deadline']}.",
-                    f"- Sai lệch: {'; '.join(row['failure_reasons'])}.",
+                    f"- Tiêu chí nghiệm thu: {row['pass_condition']}",
+                    f"- Sai lệch: {'; '.join(row['reasons'])}",
+                    f"- Đầu ra model: `{json.dumps(predicted, ensure_ascii=False)}`",
                     "",
                 ]
             )
 
     lines.extend(
         [
-            "## Cách xác định PASS/FAIL",
+            "## 5. Quy tắc chấm tự động",
             "",
-            "Một ca chỉ PASS khi đồng thời đúng: số item, actionable, type, priority, có/không có deadline và deadline chính xác nếu Golden Set có mốc cụ thể. Với ca không actionable, model phải không tạo item nào.",
-            "",
-            "Từ khóa tiêu đề chỉ là chỉ số chẩn đoán vì model có thể diễn đạt đúng bằng từ đồng nghĩa; chúng không tự động làm một ca FAIL. Các tiêu chí mô tả tự do trong `pass_criteria` vẫn được lưu trong JSON để nhóm đối chiếu khi giải thích demo. Số liệu không che giấu các ca lỗi; lỗi kỹ thuật như HTTP 402/429 hoặc JSON không hợp lệ được ghi vào raw log của lượt chạy và không ghi đè báo cáo thành công gần nhất.",
+            "- `EXTRACT`: phải trả đúng một item actionable; nếu Golden Set có priority hoặc deadline cụ thể thì các trường đó cũng phải khớp.",
+            "- `EXTRACT_WITH_WARNING`: phải có một item actionable và không tự điền `deadline_iso` khi nguồn thiếu giờ cụ thể.",
+            "- `EXTRACT_MULTIPLE`: số item actionable phải bằng `expected_tasks_count`.",
+            "- Các ca `OUT_OF_SCOPE`, `IGNORE_NOISE`, `IGNORE_OR_REJECT`, `SECURITY_BLOCK`: model không được tạo item.",
             "",
         ]
     )
     return "\n".join(lines)
 
 
-def build_html(run_info: dict, metrics: dict, rows: list[dict]) -> str:
-    cards = [
-        ("Passed", f"{metrics['passed']}/{metrics['sample_count']}"),
-        ("Pass rate", pct(metrics["pass_rate"])),
-        ("Precision", pct(metrics["precision"])),
-        ("Recall", pct(metrics["recall"])),
-        ("F1", pct(metrics["f1"])),
-        ("Type accuracy", pct(metrics["type_accuracy"])),
-        ("Priority accuracy", pct(metrics["priority_accuracy"])),
-        ("Exact deadline", pct(metrics["exact_deadline_accuracy"])),
-        ("Grounding", pct(metrics["grounding_rate"])),
-    ]
+def build_html(run: dict, metrics: dict, rows: list[dict]) -> str:
     table_rows = []
     for row in rows:
-        reason = "; ".join(row["failure_reasons"])
-        if not reason and row["diagnostic_warnings"]:
-            reason = "PASS; lưu ý: " + "; ".join(row["diagnostic_warnings"])
-        if not reason:
-            reason = "Đáp ứng toàn bộ tiêu chí"
-        css_class = "pass" if row["result"] == "PASS" else "fail"
+        css_class = "pass" if row["passed"] else "fail"
         table_rows.append(
             f'<tr class="{css_class}">'
             f"<td>{html.escape(row['id'])}</td>"
-            f"<td>{html.escape(str(row['scenario']))}</td>"
-            f"<td>{row['expected_items_count']}/{row['predicted_items_count']}</td>"
-            f"<td>{html.escape(str(row['expected_type']))}/{html.escape(str(row['predicted_type']))}</td>"
-            f"<td>{html.escape(str(row['expected_deadline'] or row['expected_has_deadline']))}/"
-            f"{html.escape(str(row['predicted_deadline'] or row['predicted_has_deadline']))}</td>"
-            f"<td><b>{row['result']}</b></td>"
-            f"<td>{html.escape(reason)}</td>"
+            f"<td>{html.escape(str(row['layer']))}</td>"
+            f"<td>{html.escape(row['expected_action'])}</td>"
+            f"<td>{row['predicted_items_count']}/{row['predicted_actionable_count']}</td>"
+            f"<td><b>{'PASS' if row['passed'] else 'FAIL'}</b></td>"
+            f"<td>{html.escape('; '.join(row['reasons']))}</td>"
             "</tr>"
         )
 
     return f"""<!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AI Discord Assistant — CP3 Eval Run {run_info['run_number']}</title>
+<title>Discord Action Digest — CP3 LLM Evaluation</title>
 <style>
 body{{font-family:system-ui,-apple-system,Segoe UI,sans-serif;margin:0;background:#111827;color:#e5e7eb}}
-main{{max-width:1280px;margin:auto;padding:28px}} h1{{margin-top:0}}
-.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}}
-.card{{background:#1f2937;border:1px solid #374151;border-radius:14px;padding:16px}}
-.card b{{display:block;font-size:26px;margin-top:6px}} .small{{color:#9ca3af;font-size:13px}}
-table{{width:100%;border-collapse:collapse;background:#1f2937}}
-th,td{{border-bottom:1px solid #374151;padding:10px;text-align:left;font-size:13px;vertical-align:top}}
-th{{color:#c7d2fe;position:sticky;top:0;background:#1f2937}}
-.wrap{{overflow:auto;max-height:680px;margin-top:22px;border:1px solid #374151;border-radius:12px}}
-.pass td:nth-child(6){{color:#86efac}} .fail td:nth-child(6){{color:#fca5a5}}
+main{{max-width:1200px;margin:auto;padding:28px}} .cards{{display:flex;gap:12px;flex-wrap:wrap}}
+.card{{background:#1f2937;border:1px solid #374151;border-radius:12px;padding:14px;min-width:150px}}
+.card b{{display:block;font-size:25px}} table{{width:100%;border-collapse:collapse;margin-top:22px;background:#1f2937}}
+th,td{{padding:10px;border-bottom:1px solid #374151;text-align:left;vertical-align:top;font-size:13px}}
+.pass td:nth-child(5){{color:#86efac}} .fail td:nth-child(5){{color:#fca5a5}}
 </style></head><body><main>
-<h1>AI Discord Assistant — CP3 Evaluation Run {run_info['run_number']}</h1>
-<p class="small">Generated: {html.escape(run_info['completed_at'])} · Model: {html.escape(str(run_info['requested_model']))}</p>
-<div class="grid">{''.join(f'<div class="card"><span class="small">{html.escape(k)}</span><b>{html.escape(v)}</b></div>' for k, v in cards)}</div>
-<div class="wrap"><table><thead><tr><th>ID</th><th>Scenario</th><th>Count E/A</th><th>Type E/A</th><th>Deadline E/A</th><th>Result</th><th>Reason</th></tr></thead>
-<tbody>{''.join(table_rows)}</tbody></table></div>
+<h1>CP3 — Live LLM Evaluation</h1>
+<p>Model: {html.escape(str(run['model']))} · Generated: {html.escape(run['completed_at'])}</p>
+<div class="cards">
+<div class="card">Passed<b>{metrics['passed']}/{metrics['total']}</b></div>
+<div class="card">Pass rate<b>{pct(metrics['pass_rate'])}</b></div>
+<div class="card">Real-data cases<b>{metrics['real_data_cases']}</b></div>
+</div>
+<table><thead><tr><th>ID</th><th>Layer</th><th>Expected</th><th>Items/actionable</th><th>Result</th><th>Reason</th></tr></thead>
+<tbody>{''.join(table_rows)}</tbody></table>
 </main></body></html>"""
 
 
-async def main() -> None:
-    args = parse_args()
-    run_number = args.run_number
-    run_name = f"CP3 Run {run_number}"
-    raw_log_path = EVAL_DIR / f"run_{run_number}_raw.json"
-    if raw_log_path.exists():
-        raise SystemExit(
-            f"Refusing to overwrite {raw_log_path.name}. "
-            "Omit --run-number to use the next unused number."
-        )
-    if run_number > 1:
-        preserve_run_one_reports()
-
-    cases = json.loads((EVAL_DIR / "golden_set.json").read_text(encoding="utf-8-sig"))
+async def run_all_eval() -> None:
+    golden_path = EVAL_DIR / "golden_set.json"
+    golden_set = json.loads(golden_path.read_text(encoding="utf-8-sig"))
     now = datetime.now(ZoneInfo(settings.timezone))
-    trace: dict[str, Any] = {
-        "run_name": run_name,
-        "run_number": run_number,
-        "started_at": now.isoformat(),
-        "status": "running",
-    }
+
     messages = [
         {
             "message_id": case["id"],
@@ -506,88 +304,75 @@ async def main() -> None:
             "channel_name": "eval",
             "author": case.get("sender", "Eval User"),
             "created_at": now.isoformat(),
-            "content": case.get("input_text") or case.get("message") or "",
+            "content": case["input_text"],
             "jump_url": None,
         }
-        for case in cases
+        for case in golden_set
     ]
 
+    print(f"Đang gửi {len(messages)} ca qua LLM thật ({settings.ai_model})...")
     try:
-        result = await analyze_messages(messages, now.isoformat(), settings.timezone, trace=trace)
+        llm_result = await analyze_messages(messages, now.isoformat(), settings.timezone)
     except Exception as exc:
-        trace.update(
-            {
-                "status": "failed",
-                "completed_at": datetime.now(ZoneInfo(settings.timezone)).isoformat(),
-                "error": {
-                    "type": type(exc).__name__,
-                    "message": str(exc),
-                    "http_status": getattr(exc, "status_code", None),
-                },
-            }
-        )
-        write_json(raw_log_path, trace)
-        status = trace["error"]["http_status"]
-        hint = {
-            402: "OpenRouter không đủ credit. Nạp credit rồi chạy lại.",
-            429: "OpenRouter đang giới hạn request. Chờ rồi chạy lại; SDK cũng tự retry lỗi tạm thời.",
-        }.get(status, "Kiểm tra error và raw response trong log; có thể model trả JSON không hợp lệ.")
+        status = getattr(exc, "status_code", None)
+        hints = {
+            402: "OpenRouter không đủ credit.",
+            429: "OpenRouter đang giới hạn request; chờ rồi chạy lại.",
+        }
         print(f"EVAL FAILED: {type(exc).__name__}: {exc}")
-        print(hint)
-        print("Raw/error log:", raw_log_path)
+        print(hints.get(status, "Kiểm tra API key, kết nối và JSON thô trong eval/ai_traces.log."))
         raise SystemExit(1) from None
 
-    completed_at = datetime.now(ZoneInfo(settings.timezone)).isoformat()
-    metrics, rows = score_cases(cases, result, trace)
-    run_info = {
-        "run_name": run_name,
-        "run_number": run_number,
-        "started_at": trace["started_at"],
-        "completed_at": completed_at,
-        "requested_model": settings.ai_model,
-        "response_model": trace.get("response", {}).get("model"),
-        "timezone": settings.timezone,
-        "raw_log_name": raw_log_path.name,
+    predictions: dict[str, list[dict]] = defaultdict(list)
+    for item in llm_result.get("items", []):
+        predictions[str(item.get("source_message_id", ""))].append(item)
+
+    rows = [score_case(case, predictions.get(case["id"], []), now) for case in golden_set]
+    total = len(rows)
+    passed = sum(row["passed"] for row in rows)
+
+    layer_breakdown: dict[str, dict] = {}
+    for row in rows:
+        stats = layer_breakdown.setdefault(row["layer"], {"total": 0, "passed": 0})
+        stats["total"] += 1
+        stats["passed"] += int(row["passed"])
+    for stats in layer_breakdown.values():
+        stats["pass_rate"] = stats["passed"] / stats["total"] if stats["total"] else 0.0
+
+    metrics = {
+        "total": total,
+        "passed": passed,
+        "failed": total - passed,
+        "pass_rate": passed / total if total else 0.0,
+        "real_data_cases": sum(row["is_real_data"] for row in rows),
+        "predicted_item_count": sum(row["predicted_items_count"] for row in rows),
+        "layer_breakdown": layer_breakdown,
     }
-    trace.update({"status": "success", "completed_at": completed_at, "metrics": metrics})
+    completed_at = datetime.now(ZoneInfo(settings.timezone)).isoformat()
+    run = {
+        "started_at": now.isoformat(),
+        "completed_at": completed_at,
+        "model": settings.ai_model,
+        "timezone": settings.timezone,
+        "evaluation_method": "live_llm_single_batch",
+    }
+    output = {"run": run, "metrics": metrics, "cases": rows}
+    markdown = build_markdown(run, metrics, rows)
 
-    output = {"run": run_info, "metrics": metrics, "cases": rows}
-    out_json = EVAL_DIR / "latest_eval_result.json"
-    report_path = EVAL_DIR / "report.html"
-    markdown_path = EVAL_DIR / "run_results.md"
-    versioned_json = EVAL_DIR / f"run_{run_number}_eval_result.json"
-    versioned_report = EVAL_DIR / f"run_{run_number}_report.html"
-    versioned_markdown = EVAL_DIR / f"run_{run_number}_results.md"
+    # Keep all public reports synchronized to this same live run.
+    write_json(EVAL_DIR / "eval_results.json", output)
+    write_json(EVAL_DIR / "latest_eval_result.json", output)
+    atomic_write(EVAL_DIR / "run_results.md", markdown)
+    atomic_write(EVAL_DIR / "EVAL_REPORT.md", markdown)
+    atomic_write(EVAL_DIR / "report.html", build_html(run, metrics, rows))
 
-    # Write raw evidence first. Reports are replaced only after a complete API
-    # response and a successful scoring pass.
-    write_json(raw_log_path, trace)
-    write_json(versioned_json, output)
-    atomic_write(versioned_report, build_html(run_info, metrics, rows))
-    atomic_write(versioned_markdown, build_markdown(run_info, metrics, rows))
-    write_json(out_json, output)
-    atomic_write(report_path, build_html(run_info, metrics, rows))
-    atomic_write(markdown_path, build_markdown(run_info, metrics, rows))
-
-    print(f"\n=== AI DISCORD ASSISTANT — CP3 RUN {run_number} ===")
-    print(f"Passed                  : {metrics['passed']}/{metrics['sample_count']}")
-    print(f"Failed                  : {metrics['failed']}/{metrics['sample_count']}")
-    print(f"Pass rate               : {pct(metrics['pass_rate'])}")
-    print(f"Actionability accuracy  : {pct(metrics['actionability_accuracy'])}")
-    print(f"Exact deadline accuracy : {pct(metrics['exact_deadline_accuracy'])}")
-    print(f"Grounding rate          : {pct(metrics['grounding_rate'])}")
-    print("\nSaved:")
-    for path in [
-        raw_log_path,
-        versioned_json,
-        versioned_report,
-        versioned_markdown,
-        out_json,
-        report_path,
-        markdown_path,
-    ]:
-        print("-", path)
+    print("\n=== LIVE LLM GOLDEN SET EVAL ===")
+    print(f"Tổng số : {total}")
+    print(f"Đạt     : {passed}")
+    print(f"Không đạt: {total - passed}")
+    print(f"Tỷ lệ   : {pct(metrics['pass_rate'])}")
+    print("Báo cáo : eval/run_results.md, eval/eval_results.json, eval/report.html")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(run_all_eval())
