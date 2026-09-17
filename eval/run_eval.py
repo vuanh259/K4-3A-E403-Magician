@@ -24,13 +24,19 @@ async def main():
     cases = json.loads((Path(__file__).parent / "golden_set.json").read_text(encoding="utf-8"))
     now = datetime.now(ZoneInfo(settings.timezone))
 
+    PRIORITY_MAP = {
+        "P1": "high", "HIGH": "high", "high": "high",
+        "P2": "medium", "MEDIUM": "medium", "medium": "medium",
+        "P3": "low", "LOW": "low", "low": "low",
+    }
+
     messages = [{
         "message_id": c["id"],
         "channel_id": "eval",
         "channel_name": "eval",
-        "author": "Eval User",
+        "author": c.get("sender", "Eval User"),
         "created_at": now.isoformat(),
-        "content": c["message"],
+        "content": c.get("input_text") or c.get("message") or "",
         "jump_url": None,
     } for c in cases]
 
@@ -51,7 +57,11 @@ async def main():
     for c in cases:
         p = preds.get(c["id"])
         pred_actionable = bool(p and p.get("action_required") is True)
-        gold = c["expected_actionable"]
+        
+        gold_actionable = c.get("expected_actionable")
+        if gold_actionable is None:
+            gold_actionable = (c.get("expected_action") == "EXTRACT")
+        gold = bool(gold_actionable)
 
         if gold and pred_actionable: tp+=1
         elif not gold and pred_actionable: fp+=1
@@ -61,27 +71,38 @@ async def main():
         if p and str(p.get("source_message_id")) == c["id"]:
             grounded += 1
 
-        if gold and pred_actionable:
-            type_n += 1
-            type_ok += int(p.get("type") == c["expected_type"])
+        raw_priority = c.get("expected_priority")
+        gold_priority = PRIORITY_MAP.get(str(raw_priority).upper(), raw_priority)
+        
+        gold_has_deadline = c.get("expected_has_deadline")
+        if gold_has_deadline is None:
+            gold_has_deadline = bool(c.get("expected_deadline"))
 
-            priority_n += 1
-            priority_ok += int(p.get("priority") == c["expected_priority"])
+        gold_type = c.get("expected_type")
+
+        if gold and pred_actionable:
+            if gold_type:
+                type_n += 1
+                type_ok += int(p.get("type") == gold_type)
+
+            if gold_priority:
+                priority_n += 1
+                priority_ok += int(p.get("priority") == gold_priority)
 
             deadline_n += 1
             pred_has_deadline = bool(p.get("deadline_iso"))
-            deadline_ok += int(pred_has_deadline == c["expected_has_deadline"])
+            deadline_ok += int(pred_has_deadline == gold_has_deadline)
 
         rows.append({
             "id": c["id"],
-            "message": c["message"],
+            "message": c.get("input_text") or c.get("message") or "",
             "gold_actionable": gold,
             "pred_actionable": pred_actionable,
-            "gold_type": c["expected_type"],
+            "gold_type": gold_type,
             "pred_type": p.get("type") if p else None,
-            "gold_priority": c["expected_priority"],
+            "gold_priority": gold_priority,
             "pred_priority": p.get("priority") if p else None,
-            "gold_has_deadline": c["expected_has_deadline"],
+            "gold_has_deadline": gold_has_deadline,
             "pred_has_deadline": bool(p.get("deadline_iso")) if p else False,
         })
 
