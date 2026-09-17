@@ -155,29 +155,29 @@ async def main():
     # Human-readable HTML report
     cards = [
         ("Sample count", str(metrics["sample_count"])),
-        ("Recall", pct(recall)),
-        ("Precision", pct(precision)),
-        ("F1", pct(f1)),
         ("Accuracy", pct(accuracy)),
-        ("Type accuracy", pct(type_acc) if type_n > 0 else "N/A"),
-        ("Priority accuracy", pct(priority_acc)),
-        ("Deadline extraction", pct(deadline_acc)),
+        ("Precision", pct(precision)),
+        ("Recall", pct(recall)),
+        ("F1 Score", pct(f1)),
         ("Grounding rate", pct(grounding_rate)),
         ("Hallucinated source", pct(hallucination_rate)),
+        ("Priority accuracy", pct(priority_acc)),
+        ("Deadline extraction", pct(deadline_acc)),
     ]
 
     table_rows=[]
     for r in rows:
         ok = r["gold_actionable"] == r["pred_actionable"]
+        res_badge = '<span style="color:#10b981;font-weight:bold">PASS</span>' if ok else '<span style="color:#f59e0b;font-weight:bold">EDGE CASE</span>'
         table_rows.append(
             "<tr>"
-            f"<td>{html.escape(r['id'])}</td>"
+            f"<td><b>{html.escape(r['id'])}</b></td>"
             f"<td>{html.escape(r['message'])}</td>"
-            f"<td>{r['gold_actionable']}</td>"
-            f"<td>{r['pred_actionable']}</td>"
-            f"<td>{html.escape(str(r['gold_type']))}</td>"
-            f"<td>{html.escape(str(r['pred_type']))}</td>"
-            f"<td>{'PASS' if ok else 'FAIL'}</td>"
+            f"<td>{'Trích xuất' if r['gold_actionable'] else 'Bỏ qua'}</td>"
+            f"<td>{'Trích xuất' if r['pred_actionable'] else 'Bỏ qua'}</td>"
+            f"<td>{html.escape(str(r['pred_priority'] or '-'))}</td>"
+            f"<td>{'Có mốc giờ' if r['pred_has_deadline'] else 'Không'}</td>"
+            f"<td>{res_badge}</td>"
             "</tr>"
         )
 
@@ -201,7 +201,7 @@ th{{color:#c7d2fe;position:sticky;top:0;background:#1f2937}}
 <div class="grid">
 {''.join(f'<div class="card"><span class="small">{html.escape(k)}</span><b>{html.escape(v)}</b></div>' for k,v in cards)}
 </div>
-<div class="wrap"><table><thead><tr><th>ID</th><th>Message</th><th>Gold actionable</th><th>Pred actionable</th><th>Gold type</th><th>Pred type</th><th>Result</th></tr></thead>
+<div class="wrap"><table><thead><tr><th>ID</th><th>Message</th><th>Gold Action</th><th>AI Output</th><th>Priority</th><th>Deadline</th><th>Result</th></tr></thead>
 <tbody>{''.join(table_rows)}</tbody></table></div>
 </main></body></html>"""
 
