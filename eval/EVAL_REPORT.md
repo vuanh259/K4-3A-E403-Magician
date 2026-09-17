@@ -1,6 +1,6 @@
 # BÁO CÁO KẾT QUẢ KIỂM THỬ ĐỊNH LƯỢNG (EVAL REPORT) — CP3 & CP4
 **Dự án:** Discord Action Digest · **Nhóm:** Magician · **Lớp:** 3A · **Phòng:** E403
-**Mô hình đánh giá thực tế:** `openai/gpt-4o-mini` (Lệnh gọi LLM trực tiếp, 100% Zero Hardcode)
+**Mô hình đánh giá thực tế:** `openai/gpt-4o-mini` (LLM thật; PASS/FAIL được chấm tự động bằng rule đã công bố)
 **Thời điểm chạy:** 2026-09-17 15:06:41
 **Bộ kiểm thử:** Golden Set gồm **22 trường hợp** (trong đó **13 trường hợp trích từ data thật** `discord-pack/`).
 
@@ -10,7 +10,7 @@
 - **Số ca không đạt (FAIL):** 3 cases
 - **Tỷ lệ kiểm thử đạt chuẩn (Pass Rate):** **86.4%** (19/22)
 - **Quality Bar đã cam kết:** $\ge 85.0\%$ và $100\%$ không bịa đặt deadline (Zero Hallucination).
-- **Kết luận nghiệm thu:** **ĐẠT CHUẨN (PASS QUALITY BAR)**
+- **Kết luận nghiệm thu:** **ĐẠT NGƯỠNG PASS RATE; CHƯA ĐẠT SAFETY HARD GATE**
 
 ### Phân tích chi tiết theo 4 Lớp chỗ khó & Nhóm kiểm thử:
 | Nhóm / Lớp chỗ khó | Số case | Đạt (Pass) | Tỷ lệ (%) | Nhận xét chất lượng thực nghiệm |
