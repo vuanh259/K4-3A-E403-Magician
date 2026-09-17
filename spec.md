@@ -70,12 +70,20 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 - **Ứng viên CHỌN:** Chọn C vì tác động trực tiếp đến $50\%$ học viên từng miss tin, có $96.7\%$ nhu cầu sử dụng thực tế.
 
 ## §3. Giải pháp tương tự đã nghiên cứu
-- **Bot bản tin ngày hiện tại (trong `data/discord-pack/`):**
-  - *Flow:* Tự động gom tin nhắn trong ngày và xuất ra một đoạn văn xuôi tóm tắt các chủ đề được hỏi.
-  - *Đáng học:* Cơ chế tự động lên lịch quét định kỳ.
-  - *Đáng né:* Tóm tắt cắt cụt, chèn lỗi "nguồn tham chiếu", không phân biệt được đâu là tin rác và đâu là việc cần làm ngay.
-  - *Mình khác gì:* Tập trung vào Actionable Items (Task, Deadline, Lịch đổi), phân loại 3 mức ưu tiên P1/P2/P3 và luôn hiển thị trích dẫn nguồn gốc kèm nút kiểm chứng.
 
+### 1. Bot bản tin ngày hiện tại (trong `data/discord-pack/`):
+- *Flow:* Tự động gom tin nhắn trong ngày và xuất ra một đoạn văn xuôi tóm tắt các chủ đề được hỏi.
+- *Đáng học:* Cơ chế tự động lên lịch quét định kỳ hàng ngày.
+- *Đáng né:* Tóm tắt văn xuôi cắt cụt, chèn lỗi "nguồn tham chiếu", không phân biệt được đâu là tin rác và đâu là việc cần làm ngay.
+- *Mình khác gì:* Tập trung vào Actionable Items (Task, Deadline, Lịch đổi), phân loại 3 mức ưu tiên P1/P2/P3 và luôn hiển thị trích dẫn nguồn gốc kèm nút kiểm chứng.
+
+### 2. Bot nhắc việc thủ công trên Discord (Ví dụ: Sesh Bot / Reminder Bot / Zapier Integration):
+- *Flow:* Học viên phải tự theo dõi kênh, tự đọc thông báo và gõ lệnh thủ công `/remindme [thời gian] [nội dung]` để bot gửi thông báo nhắc hẹn trong DM.
+- *Đáng học:* Cơ chế bắn thông báo trực tiếp (Direct Message / Mention) nhắc nhở chủ động trước giờ hạn chót (15-30 phút).
+- *Đáng né:* Bắt buộc người dùng nhập thủ công 100% (Manual overhead). Nếu học viên bị trôi tin nhắn hoặc quên không đọc kênh thì bot hoàn toàn vô dụng, không giải quyết được gốc rễ bài toán "bỏ lỡ deadline do thông báo bị trôi".
+- *Mình khác gì:* Tự động hóa hoàn toàn khâu phát hiện (Autonomous Discovery) bằng AI đọc hiểu ngữ nghĩa từ các kênh thông báo/thảo luận, trích xuất và phân cấp P1/P2/P3 không cần học viên phải tự gõ lệnh tạo task.
+
+---
 ## §4. Thiết kế & Bản mẫu tương tác (CP2)
 - **Lát cắt MỘT CÂU:** *Một học viên khóa AI Thực Chiến · dán hoặc chọn một luồng tin nhắn Discord trong ngày (hoặc gõ lệnh 'tìm cho tôi những vấn đề quan trọng hôm nay') · AI quyết định tin này chứa Task, Deadline hay Lịch đổi khẩn cấp hay không (P1/P2/P3) · trả về Thẻ công việc gồm tiêu đề, thời hạn và độ ưu tiên kèm trích dẫn nguyên văn câu gốc từ TA/Giảng viên (hoặc gắn cờ cảnh báo nếu mốc giờ mập mờ).*
 - **Non-goals (Năm việc "để sau" KHÔNG build trong sự kiện):**
@@ -129,38 +137,79 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
   - *Thao tác:* Người dùng bấm nút *"Sửa hạn nộp"* trên bất kỳ thẻ công việc nào trong bản tin.
   - *Xử lý & Kết quả:* Một Modal hiển thị cho phép học viên điều chỉnh lại tiêu đề task, mốc deadline và mức ưu tiên $\to$ Bấm *"Lưu Thay Đổi"* $\to$ Thẻ được cập nhật và hệ thống ghi log vào `validation/corrections.log`.
 
-## §7. Kiểm thử
-- **Chiều chất lượng:** Precision trích xuất $\ge 90\%$, Recall deadline $\ge 85\%$, Zero Hallucination Rate $100\%$.
-- **Cơ cấu Golden Set (22 trường hợp tại `eval/golden_set.json`):**
-  - $\ge 2$ case cho mỗi lớp trong 4 lớp chỗ khó:
-    - ① Nguồn sự thật (Chống bịa giờ): TC01, TC02 (2 cases)
-    - ② Mơ hồ / thiếu thông tin: TC03, TC04 (2 cases)
-    - ③ Ngoài phạm vi / thẩm quyền: TC05, TC06 (2 cases)
-    - ④ Đặc thù nghiệp vụ: TC07, TC08, TC22 (3 cases)
-  - 8 trường hợp phổ biến hàng ngày: TC09 đến TC16 (8 cases)
-  - 5 trường hợp hiếm gặp (Edge cases): TC17 đến TC21 (5 cases)
-  - **13/22 trường hợp trích xuất trực tiếp từ data thật (`discord-pack/k4_messages.csv`).**
-- **Quality Bar đã chốt:** "Đạt khi $\ge 85.0\%$ qua bộ Golden Set, và $100\%$ không bịa đặt deadline khi thông tin mập mờ (Zero Hallucination)."
-- **Kết quả lượt chạy thực tế (Lượt 1 - Cập nhật trước CP3 tại `eval/EVAL_REPORT.md`):**
-  - **Số ca kiểm thử:** 22 cases
-  - **Đạt chuẩn (PASS):** 19/22 cases (**86.4%** — Đạt Quality Bar $\ge 85\%$)
-  - **Không đạt (FAIL):** 3/22 cases (TC11, TC14, TC18)
-  - *Tỷ lệ theo 4 lớp chỗ khó:*
-    - ① Nguồn sự thật: 2/2 (100%) — Tuyệt đối không bịa giờ 23:59.
-    - ② Mơ hồ / Thiếu tin: 2/2 (100%) — Gắn cờ cảnh báo đúng chuẩn.
-    - ③ Ngoài phạm vi: 2/2 (100%) — Từ chối hữu ích, hướng dẫn VLearn Tutor.
-    - ④ Đặc thù nghiệp vụ: 3/3 (100%) — Bắt đúng dời lịch và dời phòng học.
-  - *Phân tích 3 lỗi thất bại:*
-    1. TC18 (Nhiều deadline trong 1 tin): Bị cắt cụt mốc sau, chỉ bắt được mốc đầu. Khắc phục: Đệ quy duyệt JSON items.
-    2. TC11 (Phân loại nhầm P3): Thiếu keyword 'lab/spec', xếp nhầm Slide PDF vào P3. Khắc phục: Thêm trọng số keyword 'slide/demo'.
-    3. TC14 (Nhận diện quá thận trọng): Gắn cờ ambiguous do câu 'trước buổi học ngày mai'. Khắc phục: Chuẩn hóa ngữ cảnh thời gian.
+## §7. Kiểm thử & Khóa ngưỡng chất lượng (Quality Bar)
 
-## §8. Phân công & Kế hoạch
-- **Nguyễn Vũ Anh (2A202602502):** Đội trưởng · AI Spec & Bằng chứng khảo sát.
-- **Nguyễn Thành Duy (2A202602804):** AI & Prompt Engineering (P1/P2/P3).
-- **Trương Việt Anh (2A202602444):** Fullstack & Discord Integration (`codebase/index.html`).
-- **Phạm Quang Đạt (2A202602704):** QA & Golden Set 22 case (`eval/golden_set.json` & `eval/run_eval.py`).
-- **Willing users (CP5):** Lê Nguyễn Thái Dương (2A202602383), Nguyễn Xuân Khuê (2A202602999).
+### 7.1. Các chiều chất lượng cam kết:
+- **Precision trích xuất task/deadline:** $\ge 90.0\%$ (Không nhận nhầm tin tán gẫu, rủ rê đi chơi hoặc troll thành task).
+- **Recall phát hiện deadline & lịch đổi:** $\ge 85.0\%$ (Không bỏ sót thông báo quan trọng của Giảng viên/TA).
+- **Zero Hallucination Rate:** $100.0\%$ (Tuyệt đối không bịa đặt deadline 23:59 khi tin nhắn không có giờ, không bịa nguồn tin).
+- **Grounding Rate:** $100.0\%$ (100% đầu việc đều trích dẫn chính xác message ID và câu nói gốc).
+
+### 7.2. Cơ cấu bộ kiểm thử Golden Set (22 trường hợp tại `eval/golden_set.json`):
+- $\ge 2$ case cho mỗi lớp trong 4 lớp chỗ khó:
+  - ① Nguồn sự thật (Chống bịa giờ): TC01, TC02 (2 cases)
+  - ② Mơ hồ / thiếu thông tin: TC03, TC04 (2 cases)
+  - ③ Ngoài phạm vi / thẩm quyền: TC05, TC06 (2 cases)
+  - ④ Đặc thù nghiệp vụ: TC07, TC08, TC22 (3 cases)
+- 8 trường hợp phổ biến hàng ngày: TC09 đến TC16 (8 cases)
+- 5 trường hợp hiếm gặp (Edge cases): TC17 đến TC21 (5 cases)
+- **13/22 trường hợp trích xuất trực tiếp từ dữ liệu thật của lớp học (`discord-pack/k4_messages.csv`).**
+
+### 7.3. Công thức Quality Bar chính thức đóng băng (Frozen Quality Bar Formula):
+Hệ thống được coi là **ĐẠT CHUẨN NGHIỆM THU** khi thỏa mãn đồng thời cả 2 điều kiện định lượng sau:
+$$\text{Quality Bar Pass Rate} = \frac{\text{Số ca kiểm thử PASS}}{\text{Tổng số ca trong Golden Set}} = \frac{19}{22} \approx 86.4\% \ge 85.0\%$$
+Kèm theo **Điều kiện an toàn bất khả xâm phạm (Safety Hard Gate):**
+$$\text{Zero Hallucination Rate} = 100.0\% \quad \text{và} \quad \text{Out-of-scope Safe Rejection} = 100.0\%$$
+
+### 7.4. Kết quả đo lường thực tế (Lượt chạy nghiệm thu CP3 & CP4 tại `eval/EVAL_REPORT.md`):
+- **Tổng số ca kiểm thử:** 22 cases
+- **Số ca đạt chuẩn (PASS):** 19/22 cases (**86.4%** — Đạt và vượt Quality Bar $\ge 85.0\%$)
+- **Số ca chưa đạt (FAIL):** 3/22 cases (TC11, TC14, TC18)
+- *Tỷ lệ theo 4 lớp chỗ khó:*
+  - ① Nguồn sự thật: 2/2 (100%) — Tuyệt đối không tự ý gán mốc giờ 23:59.
+  - ② Mơ hồ / Thiếu tin: 2/2 (100%) — Gắn nhãn cảnh báo thời gian mập mờ đúng chuẩn.
+  - ③ Ngoài phạm vi: 2/2 (100%) — Từ chối hữu ích, hướng dẫn liên hệ VLearn Tutor.
+  - ④ Đặc thù nghiệp vụ: 3/3 (100%) — Bắt chính xác 100% sự kiện dời lịch và đổi phòng học.
+
+### 7.5. Tự khai báo hạn chế & Các hạng mục chưa hoàn thiện (Self-declaration & Backlog):
+Theo nguyên tắc minh bạch khoa học của sự kiện (*"Tự khai báo khuyết điểm không bị trừ điểm, che giấu sẽ bị đánh giá nghiêm khắc"*), nhóm tự công bố 3 trường hợp chưa hoàn thiện trong đợt chạy hiện tại và kế hoạch khắc phục:
+1. **TC18 (Tin chứa nhiều deadline gộp):**
+   - *Hiện tượng:* Tin nhắn gộp cả 2 mốc `CP1 19:30` và `CP2 21:00`, mô hình chỉ bóc tách được mốc đầu tiên và bỏ sót mốc thứ hai.
+   - *Khắc phục trước CP5:* Nâng cấp prompt yêu cầu LLM phân tách câu đa mệnh đề và xuất mảng đệ quy `items: []`.
+2. **TC11 (Phân loại nhầm mức ưu tiên P3 thay vì P2):**
+   - *Hiện tượng:* Task nộp Slide PDF và Video dự phòng CP5 bị xếp nhầm vào P3 (Theo dõi) do prompt ưu tiên keyword 'lab/spec/quiz'.
+   - *Khắc phục trước CP5:* Bổ sung trọng số từ khóa 'slide', 'video', 'demo', 'cp5' vào danh mục P2 Quan trọng.
+3. **TC14 (Nhận diện quá thận trọng):**
+   - *Hiện tượng:* Với câu 'trước buổi học ngày mai', AI gắn cờ cảnh báo mốc giờ thay vì ghi nhận deadline tương đối trước giờ học.
+   - *Khắc phục trước CP5:* Chuẩn hóa ngữ cảnh thời gian tương đối gắn với mốc sự kiện lớp học.
+4. **Hạng mục chưa hỗ trợ tại CP4 (Deferred Backlog):**
+   - Chưa tích hợp đồng bộ lịch 2 chiều sang Google Calendar / Notion (đưa vào lộ trình phát triển sau sự kiện).
+
+## §8. Phân công nhân sự & Kế hoạch kiểm thử thực tế
+
+### 8.1. Bảng phân công nhân sự chi tiết (Ma trận RACI):
+
+| Thành viên | Mã HV | Vai trò chính | Đầu việc đã hoàn thành (CP1 - CP4) | Nhiệm vụ trọng tâm tiếp theo (CP5 - CP6) |
+|---|---|---|---|---|
+| **Nguyễn Vũ Anh** | `2A202602502` | **Đội trưởng (Lead)** · Product & AI Spec | Xây dựng Canvas 4 ô, hoàn thiện tài liệu `spec.md` CP1-CP4, xử lý dữ liệu khảo sát $n=30$ và mining `discord-pack/`. | Điều phối thử nghiệm với Willing Users tại CP5, biên soạn Slide thuyết trình 6 trang và dẫn dắt phần Q&A chung cuộc. |
+| **Nguyễn Thành Duy** | `2A202602804` | **AI & Prompt Engineer** | Thiết kế System Prompt trích xuất JSON, xây dựng bộ lọc phân cấp P1/P2/P3, chuẩn hóa cơ chế Anti-hallucination. | Tinh chỉnh prompt xử lý đa deadline (TC18), tối ưu token/latency và đảm bảo AI live demo mượt mà. |
+| **Trương Việt Anh** | `2A202602444` | **Fullstack & Discord Integration** | Phát triển bot Discord (`codebase/app.py`), xây dựng giao diện mô phỏng tương tác (`codebase/index.html`), kết nối SQLite database. | Đóng gói môi trường demo, hoàn thiện video demo dự phòng 30s và kiểm thử độ ổn định khi gọi bot trực tiếp. |
+| **Phạm Quang Đạt** | `2A202602704` | **QA & Benchmark Engineer** | Xây dựng bộ Golden Set 22 cases (`eval/golden_set.json`), viết script `eval/run_eval.py`, tổng hợp báo cáo `eval/EVAL_REPORT.md`. | Chạy lại benchmark đợt 2 sau khi fix prompt, thu thập log đánh giá và biên bản nghiệm thu từ Willing Users tại CP5. |
+
+### 8.2. Kế hoạch kiểm thử thực tế với Willing Users (CP5):
+- **Đối tượng thử nghiệm (2 Willing Users đã cam kết từ CP1):**
+  1. **Lê Nguyễn Thái Dương** (Mã học viên: `2A202602383`)
+  2. **Nguyễn Xuân Khuê** (Mã học viên: `2A202602999`)
+- **Thời gian & địa điểm dự kiến:** 14:00 – 15:30 ngày 18/9/2026 tại Phòng E403.
+- **Kịch bản kiểm thử (Test Protocol):**
+  1. *Bước 1 (Trải nghiệm thực tế):* Học viên truy cập server Discord lớp học, gõ lệnh `/summary all` hoặc chọn 3 kênh theo dõi chính.
+  2. *Bước 2 (Kiểm chứng kết quả):* Đánh giá độ chính xác của bản tin Action Digest: task có đúng không, deadline có bịa không, trích dẫn gốc có mở đúng tin nhắn không.
+  3. *Bước 3 (Can thiệp sửa đổi - HAX G9):* Bấm nút *"Sửa hạn nộp"* trên thẻ công việc để chỉnh sửa thời gian và lưu lại vào database.
+  4. *Bước 4 (Nhận nhắc nhở tự động):* Nhận tin nhắn DM nhắc nhở tự động trước deadline 15 phút.
+- **Tiêu chí nghiệm thu (Acceptance Criteria):**
+  - Thời gian học viên nắm bắt toàn bộ việc cần làm trong ngày giảm từ 15-20 phút xuống dưới 1 phút.
+  - Điểm mức độ hài lòng và sẵn sàng sử dụng (CSAT) $\ge 4.5/5.0$.
+  - 100% học viên xác nhận bot không bịa đặt deadline ảo.
 
 ## §9. Changelog
 | Thời điểm | Đổi gì | Vì sao |
@@ -169,4 +218,5 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
 | 16/9 - 19:35 | Cập nhật Canvas theo slide chữa bài | Gọt 4 ô theo chuẩn Pain · Bằng chứng · Impact · Lát cắt |
 | 16/9 - 20:20 | Hoàn thiện CP2 khớp 100% với `index.html` | Cập nhật luồng chat bot tương tác, 4 kịch bản bấm thử, HAX G1/G2/G9/G11 |
 | 17/9 - 10:30 | Xây dựng Golden Set 22 case & chạy Eval | Đo lường định lượng cho CP3 & khoá Quality Bar theo form hướng dẫn |
+| 17/9 - 14:50 | Hoàn thiện toàn diện AI Spec & Đóng băng Quality Bar (CP4) | Bổ sung phân tích sản phẩm tương tự thứ 2 (§3), chuẩn hóa công thức Quality Bar định lượng (§7), tự khai báo 3 hạn chế thực tế và ma trận phân công chi tiết kèm kế hoạch kiểm thử CP5 (§8) |
 
