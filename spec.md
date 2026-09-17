@@ -111,7 +111,6 @@ Loại: [ ] Tối ưu tính năng có sẵn  [x] Tính năng mới
   4. KHÔNG tra cứu điểm danh cá nhân (thuộc thẩm quyền TA).
   5. KHÔNG tự động đăng thông báo lên kênh chat chung khi chưa được kiểm duyệt.
 - **Mức prototype nhắm tới:** [x] Working Prototype — Bot Discord AI thật chạy trực tiếp trên Server lớp học (`codebase/app.py`)
-  > [!IMPORTANT]
   > **Khẳng định nghiệm thu Tiêu chí R5 (8 điểm — `codebase/` + demo):**
   > Bản mẫu của nhóm là **BOT DISCORD THẬT 100%** ([`codebase/app.py`](codebase/app.py)), KHÔNG PHẢI bản web mock (`index.html`). Hệ thống chạy live thực tế trên nền tảng Discord, đáp ứng đầy đủ 3 điều kiện của Rubric R5:
   > 1. **Chạy End-to-End theo lát cắt đã khai:** Học viên gõ lệnh `/summary all` $\to$ Bot quét tin nhắn thật 24h từ các kênh $\to$ AI phân tích lọc tin $\to$ Trả về Embed bản tin Action Digest với link nguồn $\to$ Học viên gõ `/correct` sửa trực tiếp vào SQLite $\to$ Hệ thống tự động gửi DM nhắc nhở trước hạn chót. Toàn bộ luồng khép kín không can thiệp thủ công giữa chừng.
@@ -262,15 +261,13 @@ Theo nguyên tắc minh bạch khoa học của sự kiện (*"Số xấu vẫn 
 - **Đối tượng thử nghiệm (2 Willing Users đã cam kết từ CP1):**
   1. **Lê Nguyễn Thái Dương** (Mã học viên: `2A202602383`)
   2. **Nguyễn Xuân Khuê** (Mã học viên: `2A202602999`)
-- **Thời gian & địa điểm dự kiến:** 14:00 – 15:30 ngày 18/9/2026 tại Phòng E403.
 - **Kịch bản kiểm thử (Test Protocol):**
   1. *Bước 1 (Trải nghiệm thực tế):* Học viên truy cập server Discord lớp học, gõ lệnh `/summary all` hoặc chọn 3 kênh theo dõi chính.
   2. *Bước 2 (Kiểm chứng kết quả):* Đánh giá độ chính xác của bản tin Action Digest: task có đúng không, deadline có bịa không, trích dẫn gốc có mở đúng tin nhắn không.
   3. *Bước 3 (Can thiệp sửa đổi - HAX G9):* Bấm nút *"✏️ Sửa task"* (hoặc gõ lệnh `/correct task_id`) để chỉnh sửa thời gian/độ ưu tiên và lưu lại vào database.
-  4. *Bước 4 (Nhận nhắc nhở tự động):* Nhận tin nhắn DM nhắc nhở tự động trước deadline 15 phút.
+  4. *Bước 4 (Nhận nhắc nhở tự động):* Nhận tin nhắn DM nhắc nhở tự động trước deadline 30 phút.
 - **Tiêu chí nghiệm thu (Acceptance Criteria):**
   - Thời gian học viên nắm bắt toàn bộ việc cần làm trong ngày giảm từ 5–10 phút xuống còn 2–3 phút.
-  - Điểm mức độ hài lòng và sẵn sàng sử dụng (CSAT) $\ge 4.5/5.0$.
   - 100% học viên xác nhận bot không bịa đặt deadline ảo.
 
 ### 8.3. Multi-prototype (Cân nhắc thiết kế & Quyết định chọn phương án):
