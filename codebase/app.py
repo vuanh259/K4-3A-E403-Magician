@@ -418,61 +418,6 @@ async def done(
         ephemeral=True,
     )
 
-
-@bot.tree.command(
-    name="correct",
-    description="Sửa deadline/priority/title nếu AI hiểu sai.",
-)
-@app_commands.describe(
-    task_id="Task ID",
-    deadline_iso=(
-        "Deadline ISO-8601, ví dụ "
-        "2026-09-17T21:00:00+07:00; "
-        "để trống nếu không sửa"
-    ),
-    priority="high / medium / low",
-    title="Tiêu đề mới nếu cần",
-)
-async def correct(
-    interaction: discord.Interaction,
-    task_id: int,
-    deadline_iso: str | None = None,
-    priority: str | None = None,
-    title: str | None = None,
-):
-    if (
-        priority is not None
-        and priority
-        not in {
-            "high",
-            "medium",
-            "low",
-        }
-    ):
-        await interaction.response.send_message(
-            "priority phải là high / medium / low.",
-            ephemeral=True,
-        )
-        return
-
-    ok = await store.correct_task(
-        task_id,
-        interaction.user.id,
-        deadline_iso,
-        priority,
-        title,
-    )
-
-    await interaction.response.send_message(
-        (
-            "✏️ Đã cập nhật. Reminder sẽ được tính lại nếu deadline thay đổi."
-            if ok
-            else "Không có thay đổi hoặc không tìm thấy task."
-        ),
-        ephemeral=True,
-    )
-
-
 @bot.tree.command(
     name="test_reminder",
     description="Demo DM reminder cho video CP3.",
